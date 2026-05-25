@@ -1210,19 +1210,6 @@
                 thH.textContent = 'Harnais';
                 headerRow.appendChild(thH);
             }
-            // Add spec columns
-            currentSpecCols.forEach(function(col) {
-                var th = document.createElement('th');
-                th.dataset.col = col.key;
-                th.innerHTML = col.label + ' <span class="sort-arrow">&#9650;</span>';
-                th.style.cursor = 'pointer';
-                th.addEventListener('click', function() {
-                    if (sortCol === col.key) { sortAsc = !sortAsc; }
-                    else { sortCol = col.key; sortAsc = true; }
-                    applyFilters();
-                });
-                headerRow.appendChild(th);
-            });
             // Add Notes (API) column
             var thNotes = document.createElement('th');
             thNotes.textContent = 'Notes';
@@ -1247,6 +1234,20 @@
             thDel.style.cssText = 'width:30px;min-width:30px;text-align:center;font-size:0.6rem;';
             thDel.textContent = 'DEL';
             headerRow.appendChild(thDel);
+
+            // Add spec columns (deplacees a la fin)
+            currentSpecCols.forEach(function(col) {
+                var th = document.createElement('th');
+                th.dataset.col = col.key;
+                th.innerHTML = col.label + ' <span class="sort-arrow">&#9650;</span>';
+                th.style.cursor = 'pointer';
+                th.addEventListener('click', function() {
+                    if (sortCol === col.key) { sortAsc = !sortAsc; }
+                    else { sortCol = col.key; sortAsc = true; }
+                    applyFilters();
+                });
+                headerRow.appendChild(th);
+            });
 
             // Spec field mapping per type
             var SPEC_MAP = {
@@ -1435,15 +1436,7 @@
                     tr.appendChild(tdHarnais);
                 } // end if Excavatrice harnais
 
-                // Spec fields after BOM+Harnais — dynamic per type
-                currentSpecCols.forEach(function(col) {
-                    var f = col.key;
-                    var td = document.createElement('td');
-                    var val = d[f] || '';
-                    if (val === 'A completer') { td.className = 'incomplete'; td.textContent = 'A completer'; }
-                    else { td.textContent = val; }
-                    tr.appendChild(td);
-                });
+                // (Spec fields deplaces a la fin du row — apres DEL)
 
                 // Notes column (API-synced with Portail Machine)
                 var tdNotes = document.createElement('td');
@@ -1509,6 +1502,16 @@
                     tdDel.appendChild(btn);
                 }
                 tr.appendChild(tdDel);
+
+                // Spec fields (deplaces a la fin)
+                currentSpecCols.forEach(function(col) {
+                    var f = col.key;
+                    var td = document.createElement('td');
+                    var val = d[f] || '';
+                    if (val === 'A completer') { td.className = 'incomplete'; td.textContent = 'A completer'; }
+                    else { td.textContent = val; }
+                    tr.appendChild(td);
+                });
 
                 tbody.appendChild(tr);
             }
@@ -1591,8 +1594,9 @@
                                 rowEl = probeRow ? probeRow.closest('tr') : null;
                             }
                             if (rowEl){
-                                // Spec cells are after fab + modele + BOM columns + (harnais col for Exc)
-                                var startCol = 2 + BOM_CODES.length + (d._type === 'Excavatrice' ? 1 : 0);
+                                // Spec cells now at the END of the row (after Notes/PC/Flag/Del)
+                                // Layout: Fab(0) Modele(1) BOM(2..N+1) Harnais(N+2 for Exc) Notes PC Flag Del Specs
+                                var startCol = 2 + BOM_CODES.length + (d._type === 'Excavatrice' ? 1 : 0) + 4;
                                 currentSpecCols.forEach(function(col, i){
                                     var td = rowEl.children[startCol + i];
                                     if (td) td.textContent = d[col.key] || '';
