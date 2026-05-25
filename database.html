@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e-Trak | Base de donnees</title>
-    <link rel="stylesheet" href="css/style.css?v=155">
-    <link rel="stylesheet" href="css/admin.css?v=155">
+    <link rel="stylesheet" href="css/style.css?v=156">
+    <link rel="stylesheet" href="css/admin.css?v=156">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -259,6 +259,14 @@
             max-width: 110px;
         }
         .db-harnais-select:focus { border-color: #0062CC; outline: none; }
+        .db-modele-link {
+            color: #4FC3F7;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 1px dashed rgba(79,195,247,0.4);
+        }
+        .db-modele-link:hover { color: #FFB74D; border-bottom-color: #FFB74D; }
         .db-note-input {
             background: var(--bg-input, #1a2332);
             border: 1px solid rgba(255,255,255,0.1);
@@ -725,7 +733,9 @@
         var user = null;
         try { user = JSON.parse(localStorage.getItem('portal_user')); } catch(e) {}
         var hasAccess = user && user.role && DB_ROLES[user.role];
-        var canEdit = user && user.role && EDIT_ROLES[user.role];
+        // Lecture seule : toute l'edition se fait via edit-machine.html
+        // (cliquer sur le nom du modele pour ouvrir la page d'edition)
+        var canEdit = false;
         if (!hasAccess) {
             document.querySelector('main').innerHTML = '<section class="selector-section"><p style="color:#FF4444;text-align:center;padding:2rem;">Acces non autorise. Connectez-vous avec un compte administrateur ou ingenierie.</p></section>';
         }
@@ -942,6 +952,43 @@
             return 'kit_override_' + fab.replace(/[^a-zA-Z0-9]/g,'_') + '_' + modele.replace(/[^a-zA-Z0-9]/g,'_') + '_' + annee;
         }
 
+        // Legacy format from machine.html (old): {rows:{kitId:'red/yellow/na'}, customRows:[...]}
+        // Modern format (edit-machine.html / database.html): {code:'r/j/na', harnais:'...', _custom, _removed, _specs}
+        // Normalize legacy -> modern so old API data still loads correctly.
+        var KIT_ID_TO_CODE = {
+            'cabine':'0000','sans-cabine':'0003','hauteur':'0001','rotation':'0002',
+            'cremaillere':'0304','mini':'0004','gc':'0070','swing':'0008','drain':'0009','multi':'0005',
+            'pompe-coffre':'0200','pompe-sans-coffre':'0203','pompe-hauteur':'0201','pompe-rotation':'0202',
+            'pompe-4sec':'0204','pompe-5sec':'0205','pompe-6sec':'0206',
+            'pompe-rot-cylindre':'0207','pompe-inclinometre':'0208','pompe-reel':'0209'
+        };
+        var STATUS_LEGACY_TO_RJN = { 'red':'r', 'yellow':'j', 'na':'na' };
+
+        function normalizeOverride(ov) {
+            if (!ov || typeof ov !== 'object') return ov;
+            // Already modern format
+            if (!ov.rows && !ov.customRows) return ov;
+            var out = {};
+            if (ov.rows) {
+                Object.keys(ov.rows).forEach(function(kitId) {
+                    var code = KIT_ID_TO_CODE[kitId];
+                    if (code) out[code] = STATUS_LEGACY_TO_RJN[ov.rows[kitId]] || 'na';
+                });
+            }
+            if (Array.isArray(ov.customRows)) {
+                out._custom = ov.customRows.map(function(c) {
+                    return {
+                        code: c.id || c.code,
+                        pn: c.code || '',
+                        desc: c.label || '',
+                        status: STATUS_LEGACY_TO_RJN[c.status] || 'na'
+                    };
+                });
+            }
+            if (ov.harnais) out.harnais = ov.harnais;
+            return out;
+        }
+
         function loadOverride(fab, modele, annee, callback) {
             var key = bomKey(fab, modele, annee);
             if (overridesCache[key] !== undefined) { callback(overridesCache[key]); return; }
@@ -950,6 +997,7 @@
                 .then(function(data) {
                     var val = null;
                     if (data.value) { try { val = JSON.parse(data.value); } catch(e) {} }
+                    val = normalizeOverride(val);
                     overridesCache[key] = val;
                     callback(val);
                 })
@@ -1327,8 +1375,16 @@
                 var searchActive = document.getElementById('db-search').value.trim() !== '';
                 ['fab', 'modele'].forEach(function(f) {
                     var td = document.createElement('td');
-                    if (f === 'modele' && searchActive) {
-                        td.textContent = d.modele + ' (' + d.annee + ')';
+                    if (f === 'modele') {
+                        var link = document.createElement('a');
+                        link.className = 'db-modele-link';
+                        link.href = 'edit-machine.html?type=' + encodeURIComponent(d._type || '') +
+                                    '&fab=' + encodeURIComponent(d.fab) +
+                                    '&year=' + encodeURIComponent(d.annee) +
+                                    '&model=' + encodeURIComponent(d.modele);
+                        link.title = 'Editer ' + d.fab + ' ' + d.modele + ' (' + d.annee + ')';
+                        link.textContent = searchActive ? (d.modele + ' (' + d.annee + ')') : d.modele;
+                        td.appendChild(link);
                     } else {
                         td.textContent = d[f] || '';
                     }
@@ -1348,49 +1404,35 @@
                     var td = document.createElement('td');
                     td.style.textAlign = 'center';
                     td.style.padding = '4px';
-                    var state = (d.bom && d.bom[code]) || 'na';
-                    td.innerHTML = bomTokenHtml(state, code, dataIdx, canEdit);
+                    var isRemoved = Array.isArray(d._removed) && d._removed.indexOf(code) >= 0;
+                    if (isRemoved){
+                        td.innerHTML = '<span class="bom-token bom-na readonly" data-code="' + code + '" data-idx="' + dataIdx + '" title="Retire pour cette machine" style="opacity:0.4">&times;</span>';
+                    } else {
+                        var state = (d.bom && d.bom[code]) || 'na';
+                        td.innerHTML = bomTokenHtml(state, code, dataIdx, canEdit);
+                    }
                     tr.appendChild(td);
                 });
 
-                // Harnais column — seulement pour Excavatrice
+                // Harnais column — seulement pour Excavatrice (lecture seule, affiche le PN Z03B-XXXX)
                 if (d._type === 'Excavatrice') {
-                var tdHarnais = document.createElement('td');
-                tdHarnais.style.textAlign = 'center';
-                tdHarnais.style.padding = '2px';
-                var harnaisCode = d.harnais || '';
-                var HARNAIS_OPTIONS = [
-                    {v: '', l: '-'},
-                    {v: 'H0031', l: '0031 Hit5/6-JD'},
-                    {v: 'H0032', l: '0032 Komatsu'},
-                    {v: 'H0033', l: '0033 Doosan'},
-                    {v: 'H0034', l: '0034 Volvo'},
-                    {v: 'H0041', l: '0041 LB-Case'},
-                    {v: 'H0080', l: '0080 Cat'},
-                    {v: 'H0100', l: '0100 Cat (ECU)'},
-                    {v: 'H0121', l: '0121 Hit-7'},
-                    {v: 'H0043', l: '0043 Generic'}
-                ];
-                if (canEdit) {
-                    var sel = document.createElement('select');
-                    sel.className = 'db-harnais-select';
-                    sel.dataset.idx = dataIdx;
-                    HARNAIS_OPTIONS.forEach(function(o) {
-                        var opt = document.createElement('option');
-                        opt.value = o.v;
-                        opt.textContent = o.l;
-                        if (o.v === harnaisCode) opt.selected = true;
-                        sel.appendChild(opt);
-                    });
-                    tdHarnais.appendChild(sel);
-                } else {
-                    var HARNAIS_LABELS = {'H0031':'Hit5/6-JD','H0032':'Komatsu','H0033':'Doosan','H0034':'Volvo','H0041':'LB-Case','H0080':'Cat','H0100':'Cat(ECU)','H0121':'Hit-7','H0043':'Generic'};
-                    tdHarnais.style.fontSize = '0.65rem';
-                    tdHarnais.style.fontWeight = '700';
-                    tdHarnais.style.color = harnaisCode ? '#00CC66' : '#555';
-                    tdHarnais.textContent = HARNAIS_LABELS[harnaisCode] || '-';
-                }
-                tr.appendChild(tdHarnais);
+                    var tdHarnais = document.createElement('td');
+                    tdHarnais.className = 'db-harnais-pn';
+                    tdHarnais.dataset.idx = dataIdx;
+                    tdHarnais.style.textAlign = 'center';
+                    tdHarnais.style.padding = '4px';
+                    tdHarnais.style.fontSize = '0.72rem';
+                    tdHarnais.style.fontWeight = '600';
+                    tdHarnais.style.fontFamily = "'JetBrains Mono','Courier New',monospace";
+                    var harnaisCode = d.harnais || '';
+                    if (harnaisCode) {
+                        tdHarnais.style.color = '#00CC66';
+                        tdHarnais.textContent = 'Z03B-' + harnaisCode.replace(/^H/, '');
+                    } else {
+                        tdHarnais.style.color = '#555';
+                        tdHarnais.textContent = '-';
+                    }
+                    tr.appendChild(tdHarnais);
                 } // end if Excavatrice harnais
 
                 // Spec fields after BOM+Harnais — dynamic per type
@@ -1410,6 +1452,8 @@
                 noteInput.type = 'text';
                 noteInput.className = 'db-note-input';
                 noteInput.placeholder = '...';
+                noteInput.readOnly = true;
+                noteInput.title = 'Lecture seule — editer via la page d\'edition (cliquer sur le modele)';
                 noteInput.dataset.fab = d.fab;
                 noteInput.dataset.modele = d.modele;
                 noteInput.dataset.annee = d.annee;
@@ -1481,25 +1525,88 @@
                             if (d._type === 'Pompe a Beton') d.bom = computeDefaultBomPompe(d);
                             else d.bom = computeDefaultBom(d);
                         }
+                        // Apply meta keys (skip from BOM merge)
+                        var removed = Array.isArray(overrides._removed) ? overrides._removed : [];
+                        var custom  = Array.isArray(overrides._custom)  ? overrides._custom  : [];
+                        var specsOv = overrides._specs || null;
+                        d._removed = removed;
+                        d._custom = custom;
+                        // Apply spec overrides on entry's fields (re-mapping)
+                        if (specsOv){
+                            var SPEC_FIELD_MAP = {
+                                'Excavatrice': {
+                                    'Puissance moteur (kW / HP)':'puissance','Type de traction':'traction',
+                                    'Type de boom':'boom','Swing boom':'swing',
+                                    'Voltage machine (V/type)':'voltage',
+                                    'Poids operationnel (kg / lbs)':'poids','Classe machine':'classe'
+                                },
+                                'Pompe a Beton': {
+                                    'Type':'type_pompe','Nombre de sections':'nb_sections','Type de pliage':'pliage',
+                                    'Voltage machine (V/type)':'voltage','Type de rotation':'rotation',
+                                    'Console operateur':'console','E-stop':'estop','Notes':'notes'
+                                }
+                            };
+                            var fmap = SPEC_FIELD_MAP[d._type] || {};
+                            Object.keys(specsOv).forEach(function(fullKey){
+                                d['_spec_' + fullKey] = specsOv[fullKey];
+                                if (fmap[fullKey]) d[fmap[fullKey]] = specsOv[fullKey];
+                            });
+                        }
+                        // Merge BOM codes (skip meta keys)
                         for (var code in overrides) {
+                            if (code === '_removed' || code === '_custom' || code === '_specs' || code === 'harnais') continue;
                             d.bom[code] = overrides[code];
                         }
                         // Drain hyd (0009) ne peut JAMAIS etre jaune
                         if (d.bom['0009'] === 'j') d.bom['0009'] = 'r';
-                        // Update visible tokens
+                        // Update visible tokens (respecting _removed)
                         var tokens = tbody.querySelectorAll('[data-idx="' + globalIdx + '"]');
                         tokens.forEach(function(token) {
                             var c = token.dataset.code;
-                            if (!c) return; // skip non-bom elements like harnais select
+                            if (!c) return;
+                            if (removed.indexOf(c) >= 0){
+                                token.className = 'bom-token bom-na readonly';
+                                token.textContent = '×';
+                                token.style.opacity = '0.4';
+                                token.title = 'Retire pour cette machine';
+                                return;
+                            }
                             var st = d.bom[c] || 'na';
                             token.className = 'bom-token' + (st === 'r' ? ' bom-r' : st === 'j' ? ' bom-j' : ' bom-na') + (canEdit ? '' : ' readonly');
                             token.textContent = st === 'r' ? '' : st === 'j' ? '' : '-';
                         });
-                        // Update harnais dropdown if override has it
+                        // Re-apply spec cells (specs columns are at fixed positions after BOM+harnais)
+                        if (specsOv){
+                            var rowEl = tbody.querySelector('.db-harnais-pn[data-idx="' + globalIdx + '"]') ?
+                                        tbody.querySelector('.db-harnais-pn[data-idx="' + globalIdx + '"]').parentElement : null;
+                            if (rowEl){
+                                // Find the row by walking from any cell with data-idx
+                                var allRows = tbody.querySelectorAll('tr');
+                                for (var ri = 0; ri < allRows.length; ri++){
+                                    var probeCell = allRows[ri].querySelector('[data-idx="' + globalIdx + '"]');
+                                    if (probeCell){ rowEl = allRows[ri]; break; }
+                                }
+                            } else {
+                                var probeRow = tbody.querySelector('[data-idx="' + globalIdx + '"]');
+                                rowEl = probeRow ? probeRow.closest('tr') : null;
+                            }
+                            if (rowEl){
+                                // Spec cells are after fab + modele + BOM columns + (harnais col for Exc)
+                                var startCol = 2 + BOM_CODES.length + (d._type === 'Excavatrice' ? 1 : 0);
+                                currentSpecCols.forEach(function(col, i){
+                                    var td = rowEl.children[startCol + i];
+                                    if (td) td.textContent = d[col.key] || '';
+                                });
+                            }
+                        }
+                        // Update harnais PN cell if override has it
                         if (overrides.harnais) {
                             d.harnais = overrides.harnais;
-                            var hSel = tbody.querySelector('.db-harnais-select[data-idx="' + globalIdx + '"]');
-                            if (hSel) hSel.value = overrides.harnais;
+                            var hCell = tbody.querySelector('.db-harnais-pn[data-idx="' + globalIdx + '"]');
+                            if (hCell) {
+                                hCell.style.color = '#00CC66';
+                                hCell.textContent = 'Z03B-' + overrides.harnais.replace(/^H/, '');
+                            }
                         }
                     });
                 })(i);
@@ -1546,10 +1653,10 @@
             });
         }
 
-        // Change harnais dropdown
+        // Change harnais dropdown — (legacy, dead code: l'edition se fait via edit-machine.html)
         document.getElementById('db-tbody').addEventListener('change', function(e) {
             var sel = e.target.closest('.db-harnais-select');
-            if (!sel || !canEdit) return;
+            if (!sel || !canEdit) return;  // both always false now
             var idx = parseInt(sel.dataset.idx);
             var d = allData[idx];
             if (!d) return;

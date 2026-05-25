@@ -322,6 +322,14 @@ function loadBomOverrides(fab, modele, annee) {
                 try { currentBomOverrides = JSON.parse(data.value); } catch(e) {}
             }
             updateSelectedSummary();
+            // Re-render specs if _specs override is present
+            if (currentBomOverrides && currentBomOverrides._specs) {
+                var type = selectType ? selectType.value : '';
+                var fab2 = selectFabricant ? selectFabricant.value : '';
+                var annee2 = selectAnnee ? selectAnnee.value : '';
+                var modele2 = selectModele ? selectModele.value : '';
+                if (type && fab2 && annee2 && modele2) renderSpecsTable(type, fab2, annee2, modele2);
+            }
         })
         .catch(function() {});
 }
@@ -348,7 +356,15 @@ function renderSpecsTable(type, fab, annee, modele) {
 
     var specs = {};
     if (machinesData[type] && machinesData[type][fab] && machinesData[type][fab][annee] && machinesData[type][fab][annee][modele]) {
-        specs = machinesData[type][fab][annee][modele];
+        // shallow copy so we don't mutate machinesData when applying overrides
+        var base = machinesData[type][fab][annee][modele];
+        for (var k in base) specs[k] = base[k];
+    }
+    // Apply _specs override (edit-machine.html is master)
+    if (currentBomOverrides && currentBomOverrides._specs){
+        Object.keys(currentBomOverrides._specs).forEach(function(k){
+            specs[k] = currentBomOverrides._specs[k];
+        });
     }
 
     if (title) title.textContent = fab + ' ' + modele + ' (' + annee + ')';
@@ -449,9 +465,14 @@ function getKitSummary(type, fab, modele, specs) {
     // Apply BOM overrides from API (BD is master — any non-na value means present)
     if (currentBomOverrides) {
         for (var code in currentBomOverrides) {
+            if (code === '_specs' || code === '_custom' || code === '_removed' || code === 'harnais') continue;
             var ov = currentBomOverrides[code];
             if (ov === 'na') bomDefaults[code] = false;
             else if (ov) bomDefaults[code] = true;
+        }
+        // _removed: force absent
+        if (Array.isArray(currentBomOverrides._removed)){
+            currentBomOverrides._removed.forEach(function(c){ bomDefaults[c] = false; });
         }
     }
 
@@ -508,6 +529,18 @@ function getKitSummary(type, fab, modele, specs) {
         hName = 'Harnais ' + (HARNAIS_LABELS[hOverride] || hOverride);
     }
     kit.push({ code: hCode, name: hName, status: 'Obligatoire' });
+
+    // Custom rows from edit-machine.html (_custom)
+    if (currentBomOverrides && Array.isArray(currentBomOverrides._custom)){
+        currentBomOverrides._custom.forEach(function(c){
+            if (c.status === 'na') return;
+            kit.push({
+                code: c.pn || c.code,
+                name: c.desc || c.code,
+                status: c.status === 'r' ? 'Obligatoire' : 'Optionnel'
+            });
+        });
+    }
 
     return kit;
 }
