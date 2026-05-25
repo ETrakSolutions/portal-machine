@@ -1163,10 +1163,14 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 fullData = data;
-                // Populate type dropdown dynamically from JSON keys
+                // Populate type dropdown — Excavatrice et Pompe a Beton en tete, puis le reste alphabetique
                 var typeSelect = document.getElementById('db-type');
                 typeSelect.innerHTML = '';
-                Object.keys(fullData).sort().forEach(function(t) {
+                var TYPE_ORDER_PRIORITY = ['Excavatrice', 'Pompe a Beton'];
+                var allTypes = Object.keys(fullData);
+                var sortedTypes = TYPE_ORDER_PRIORITY.filter(function(t){ return allTypes.indexOf(t) >= 0; })
+                    .concat(allTypes.filter(function(t){ return TYPE_ORDER_PRIORITY.indexOf(t) < 0; }).sort());
+                sortedTypes.forEach(function(t) {
                     var opt = document.createElement('option');
                     opt.value = t;
                     opt.textContent = t;
