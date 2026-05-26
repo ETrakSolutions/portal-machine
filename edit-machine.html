@@ -918,15 +918,14 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
         '</tr>';
       });
 
-      // Add line form (inline)
+      // Add line form (inline) — Code (sera affiche en Part Number) + Description
       if (canEdit && ADDING_LINE){
         bomRows += '<tr class="add-row">' +
           '<td>' +
-            '<input type="text" id="add-pn" placeholder="ex 1500-0500" style="width:100%;padding:0.3rem 0.5rem;font-size:0.85rem">' +
+            '<input type="text" id="add-code" placeholder="Code" style="width:100%;padding:0.3rem 0.5rem;font-size:0.85rem">' +
           '</td>' +
           '<td>' +
-            '<input type="text" id="add-code" placeholder="Code" style="width:80px;padding:0.3rem 0.5rem;font-size:0.85rem;margin-right:6px">' +
-            '<input type="text" id="add-desc" placeholder="Description" style="width:calc(100% - 90px);padding:0.3rem 0.5rem;font-size:0.85rem">' +
+            '<input type="text" id="add-desc" placeholder="Description" style="width:100%;padding:0.3rem 0.5rem;font-size:0.85rem">' +
           '</td>' +
           '<td>' +
             '<select id="add-status" style="padding:0.3rem 0.5rem;font-size:0.85rem;width:100%">' +
@@ -1113,10 +1112,10 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
       if (addConfirm) addConfirm.addEventListener('click', function(){
         var code = (document.getElementById('add-code').value||'').trim();
         var desc = (document.getElementById('add-desc').value||'').trim();
-        var pn = (document.getElementById('add-pn').value||'').trim();
         var status = document.getElementById('add-status').value;
         if (!code){ document.getElementById('add-code').focus(); return; }
-        CUSTOM_CURRENT.push({code:code, desc:desc, pn:pn, status:status});
+        // pn = code (le Code saisi sert aussi de Part Number affiche)
+        CUSTOM_CURRENT.push({code:code, desc:desc, pn:code, status:status});
         ADDING_LINE = false;
         render();
       });
