@@ -653,13 +653,17 @@ function renderUsers() {
         var tr = document.createElement('tr');
         tr.style.cursor = 'pointer';
         tr.dataset.idx = i;
+        // Voyant d'activite (sera mis a jour par loadActiveStatus apres render)
+        var dotHtml = '<span class="user-active-dot" data-email="' + (user.email || '').toLowerCase() + '" title="Statut inconnu" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;margin-right:8px;vertical-align:middle"></span>';
         tr.innerHTML =
-            '<td><strong>' + user.name + '</strong>' + (isSuperAdmin ? ' <span style="color:#FFD700;font-size:0.65rem;">&#9733; SUPER</span>' : '') + '</td>' +
+            '<td>' + dotHtml + '<strong>' + user.name + '</strong>' + (isSuperAdmin ? ' <span style="color:#FFD700;font-size:0.65rem;">&#9733; SUPER</span>' : '') + '</td>' +
             '<td>' + (user.email || '<span style="color:#555;">\u2014</span>') + '</td>' +
             '<td><span class="role-badge role-' + user.role + '">' + roleLabel + '</span></td>' +
             '<td>' + (!isSuperAdmin && currentUser && currentUser.permissions && currentUser.permissions.modifAccounts ? '<button class="admin-delete-btn" data-idx="' + i + '">\u2715</button>' : '') + '</td>';
         tbody.appendChild(tr);
     });
+    // Charger les statuts d'activite (heartbeat) pour chaque user
+    loadUserActiveStatus();
     // Click row to edit user
     tbody.querySelectorAll('tr').forEach(function(tr) {
         tr.addEventListener('click', function(e) {
@@ -686,6 +690,51 @@ function renderUsers() {
         });
     });
 }
+
+// === Voyant d'activite : heartbeat + load ===
+// Charge le dernier timestamp d'activite pour chaque user et met a jour le voyant
+function loadUserActiveStatus() {
+    var ACTIVE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+    var now = Date.now();
+    document.querySelectorAll('.user-active-dot').forEach(function(dot) {
+        var email = dot.dataset.email;
+        if (!email) return;
+        var key = 'user_active_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+        fetch(API_URL + '?action=get&key=' + encodeURIComponent(key))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.value) {
+                    dot.style.background = '#444';
+                    dot.title = 'Jamais connecte ou inactif';
+                    return;
+                }
+                var ts = new Date(data.value).getTime();
+                if (isNaN(ts)) { dot.style.background = '#444'; dot.title = 'Inconnu'; return; }
+                var diff = now - ts;
+                if (diff < ACTIVE_THRESHOLD_MS) {
+                    dot.style.background = '#00CC66';
+                    dot.style.boxShadow = '0 0 6px rgba(0,204,102,0.7)';
+                    dot.title = 'Actif maintenant (dernier ping: ' + Math.round(diff/1000) + 's)';
+                } else {
+                    dot.style.background = '#444';
+                    var mins = Math.round(diff / 60000);
+                    var lastSeen = mins < 60 ? mins + ' min' : Math.round(mins/60) + 'h';
+                    dot.title = 'Dernier passage il y a ' + lastSeen;
+                }
+            })
+            .catch(function() {});
+    });
+}
+
+// Demarre le heartbeat au chargement (defini dans le snippet global window.startUserHeartbeat)
+if (typeof window !== 'undefined' && typeof window.startUserHeartbeat === 'function') {
+    document.addEventListener('DOMContentLoaded', window.startUserHeartbeat);
+}
+
+// Refresh des voyants toutes les 30s quand on est dans la section admin
+setInterval(function() {
+    if (document.querySelectorAll('.user-active-dot').length > 0) loadUserActiveStatus();
+}, 30000);
 
 // ---- EDIT USER MODAL ----
 function openEditUserModal(idx) {
