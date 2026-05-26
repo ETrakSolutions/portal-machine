@@ -429,7 +429,7 @@ function getKitSummary(type, fab, modele, specs) {
     var fabUp = fab.toUpperCase();
     var isCat = fabUp.indexOf('CATERPILLAR') >= 0 || fabUp === 'CAT';
     var hasSwing = (specs['Swing boom'] || '').toLowerCase() === 'oui';
-    var isMini = poidsKg > 0 && poidsKg < 5000;
+    var isMini = poidsKg > 0 && poidsKg <= 5000;
     var typeBras = specs['Type de boom'] || '';
 
     var DRAIN_PREFIXES = [

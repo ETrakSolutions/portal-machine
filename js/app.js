@@ -460,7 +460,7 @@ function showResults(modele, type, fab, annee, specs, isCustom) {
         var poidsMatch = poidsStr.match(/(\d[\d\s]*)/);
         var poidsKg = poidsMatch ? parseInt(poidsMatch[1].replace(/\s/g, '')) : 0;
         var hasSwing = (specs['Swing boom'] || '').toLowerCase() === 'oui';
-        var isMini = poidsKg > 0 && poidsKg < 5000;
+        var isMini = poidsKg > 0 && poidsKg <= 5000;
         var fabUp = fab.toUpperCase();
         var isCat = fabUp.indexOf('CATERPILLAR') >= 0 || fabUp === 'CAT';
         var modelUpper = modele.toUpperCase();

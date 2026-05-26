@@ -435,7 +435,7 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     var bom = {};
     var poids = parseWeight(d);
     var hasSwing = (d['Swing boom']||'').toLowerCase()==='oui';
-    var isMini = poids > 0 && poids < 5000;
+    var isMini = poids > 0 && poids <= 5000;
     var modUpper = MODEL.toUpperCase();
     var fabUpper = FAB.toUpperCase();
 

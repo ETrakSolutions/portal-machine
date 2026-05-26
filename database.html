@@ -1088,7 +1088,7 @@
 
             var hasSwing = (d.swing || '').toLowerCase() === 'oui';
             var hasBoom2 = (d.boom || '').toLowerCase().indexOf('2 partie') >= 0;
-            var isMini = poids > 0 && poids < 5000;
+            var isMini = poids > 0 && poids <= 5000;
             var isStandard = poids >= 5000;
 
             // Cabine obligatoire pour toutes les machines
