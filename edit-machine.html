@@ -1107,16 +1107,34 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
           render();
         });
       });
-      // Delete row buttons
+      // Delete row buttons — confirme + demande si toutes annees ou juste cette machine
       document.querySelectorAll('.row-del').forEach(function(btn){
         btn.addEventListener('click', function(){
           var kind = btn.dataset.kind;
+          var nYears = ALL_YEARS_FOR_MODEL.length;
+
+          // 1ere confirmation: vraiment supprimer?
+          if (!confirm('Retirer cette ligne du Kit BOM ?')) return;
+
+          // Si modele present sur >1 annee: demander la portee
+          var applyAllYears = false;
+          if (nYears > 1) {
+            applyAllYears = confirm(
+              'Appliquer la suppression a TOUTES les annees du modele (' + nYears + ' annees) ?\n\n' +
+              'OK = toutes les annees\n' +
+              'Annuler = uniquement annee ' + YEAR
+            );
+          }
+
           if (kind === 'std'){
             var code = btn.dataset.code;
             if (REMOVED_CURRENT.indexOf(code) < 0) REMOVED_CURRENT.push(code);
+            if (applyAllYears) SCOPE_ALL_CODES[code] = true;
           } else if (kind === 'custom'){
             var idx = parseInt(btn.dataset.custom);
+            var customCode = CUSTOM_CURRENT[idx] ? CUSTOM_CURRENT[idx].code : null;
             CUSTOM_CURRENT.splice(idx, 1);
+            if (applyAllYears && customCode) SCOPE_ALL_CODES[customCode] = true;
           }
           render();
         });
