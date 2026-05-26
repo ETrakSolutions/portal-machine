@@ -197,25 +197,42 @@ function doFabChange() {
         selectAnnee.appendChild(opt);
     });
     selectAnnee.disabled = false;
+    // Peuple aussi les modeles (toutes annees confondues) — la cascade nouvelle
+    // permet de choisir Modele independamment de Annee
+    populateModeles(type, fab, null);
 }
 selectFabricant.addEventListener('change', () => {
     if (hasActiveOptions()) { confirmReset(doFabChange); } else { doFabChange(); }
 });
 
-function doAnneeChange() {
-    resetFrom('modele');
-    const type = selectType.value;
-    const fab = selectFabricant.value;
-    const annee = selectAnnee.value;
-    if (!annee) return;
-    const modeles = Object.keys(machinesData[type][fab][annee]).sort();
-    modeles.forEach(modele => {
+// Helper: peuple les modeles (filtre optionnellement par annee)
+function populateModeles(type, fab, anneeFilter) {
+    var sel_txt = (typeof i18n !== 'undefined') ? i18n.t('common.selectionnez') : '-- Selectionnez --';
+    selectModele.innerHTML = '<option value="">' + sel_txt + '</option>';
+    var modelesSet = {};
+    var years = Object.keys(machinesData[type][fab]);
+    if (anneeFilter) years = years.filter(function(y){ return y === anneeFilter; });
+    years.forEach(function(y) {
+        Object.keys(machinesData[type][fab][y]).forEach(function(m) { modelesSet[m] = true; });
+    });
+    Object.keys(modelesSet).sort().forEach(function(modele) {
         const opt = document.createElement('option');
         opt.value = modele;
         opt.textContent = modele;
         selectModele.appendChild(opt);
     });
     selectModele.disabled = false;
+}
+
+function doAnneeChange() {
+    // L'annee est maintenant un filtre optionnel — re-filtre les modeles
+    const type = selectType.value;
+    const fab = selectFabricant.value;
+    const annee = selectAnnee.value;
+    if (!fab) return;
+    selectModele.value = '';
+    hideOptions();
+    populateModeles(type, fab, annee || null);
 }
 selectAnnee.addEventListener('change', () => {
     if (hasActiveOptions()) { confirmReset(doAnneeChange); } else { doAnneeChange(); }
@@ -224,6 +241,20 @@ selectAnnee.addEventListener('change', () => {
 function doModeleChange() {
     const modele = selectModele.value;
     if (!modele) { hideOptions(); return; }
+    // Si pas d'annee selectionnee, auto-pick l'annee la plus recente qui a ce modele
+    const type = selectType.value;
+    const fab = selectFabricant.value;
+    let annee = selectAnnee.value;
+    if (!annee) {
+        var allYears = Object.keys(machinesData[type][fab]).sort().reverse();
+        for (var i = 0; i < allYears.length; i++) {
+            if (machinesData[type][fab][allYears[i]][modele]) {
+                annee = allYears[i];
+                selectAnnee.value = annee;
+                break;
+            }
+        }
+    }
     showOptions();
 }
 selectModele.addEventListener('change', () => {
