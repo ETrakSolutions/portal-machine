@@ -265,8 +265,38 @@
             font-weight: 600;
             cursor: pointer;
             border-bottom: 1px dashed rgba(79,195,247,0.4);
+            white-space: nowrap;
         }
         .db-modele-link:hover { color: #FFB74D; border-bottom-color: #FFB74D; }
+        .db-modele-year {
+            color: #888;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.2rem;
+        }
+        .db-fixed-col {
+            padding: 4px 6px !important;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .db-note-dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            cursor: help;
+            transition: all 0.2s;
+        }
+        .db-note-dot.has-note {
+            background: #00CC66;
+            border-color: #00CC66;
+            box-shadow: 0 0 6px rgba(0,204,102,0.6);
+        }
         .db-note-input {
             background: var(--bg-input, #1a2332);
             border: 1px solid rgba(255,255,255,0.1);
@@ -401,8 +431,8 @@
                 <table class="db-table" id="db-table">
                     <thead>
                         <tr>
-                            <th data-col="fab"><span data-i18n="db.th_fabricant">Fabricant</span> <span class="sort-arrow">&#9650;</span></th>
-                            <th data-col="modele"><span data-i18n="db.th_modele">Modele</span> <span class="sort-arrow">&#9650;</span></th>
+                            <th data-col="fab" style="width:110px;min-width:80px;"><span data-i18n="db.th_fabricant">Fabricant</span> <span class="sort-arrow">&#9650;</span></th>
+                            <th data-col="modele" style="width:130px;min-width:100px;"><span data-i18n="db.th_modele">Modele</span> <span class="sort-arrow">&#9650;</span></th>
                             <!-- BOM + Spec + FLAG + DEL columns generated dynamically by loadType() -->
                         </tr>
                     </thead>
@@ -1217,7 +1247,7 @@
             // Add Notes (API) column
             var thNotes = document.createElement('th');
             thNotes.textContent = 'Notes';
-            thNotes.style.minWidth = '130px';
+            thNotes.style.cssText = 'width:50px;min-width:50px;text-align:center;font-size:0.65rem;';
             headerRow.appendChild(thNotes);
 
             // (Colonne Codes produit retiree — edition uniquement via edit-machine.html)
@@ -1372,6 +1402,7 @@
                 var searchActive = document.getElementById('db-search').value.trim() !== '';
                 ['fab', 'modele'].forEach(function(f) {
                     var td = document.createElement('td');
+                    td.className = 'db-fixed-col';
                     if (f === 'modele') {
                         var link = document.createElement('a');
                         link.className = 'db-modele-link';
@@ -1380,8 +1411,12 @@
                                     '&year=' + encodeURIComponent(d.annee) +
                                     '&model=' + encodeURIComponent(d.modele);
                         link.title = 'Editer ' + d.fab + ' ' + d.modele + ' (' + d.annee + ')';
-                        link.textContent = searchActive ? (d.modele + ' (' + d.annee + ')') : d.modele;
+                        link.textContent = d.modele;
                         td.appendChild(link);
+                        var yearSpan = document.createElement('span');
+                        yearSpan.className = 'db-modele-year';
+                        yearSpan.textContent = ' ' + d.annee;
+                        td.appendChild(yearSpan);
                     } else {
                         td.textContent = d[f] || '';
                     }
@@ -1434,20 +1469,18 @@
 
                 // (Spec fields deplaces a la fin du row — apres DEL)
 
-                // Notes column (API-synced with Portail Machine)
+                // Notes column — temoin lumineux (s'active quand une note existe)
                 var tdNotes = document.createElement('td');
-                tdNotes.style.padding = '2px';
-                var noteInput = document.createElement('input');
-                noteInput.type = 'text';
-                noteInput.className = 'db-note-input';
-                noteInput.placeholder = '...';
-                noteInput.readOnly = true;
-                noteInput.title = 'Lecture seule — editer via la page d\'edition (cliquer sur le modele)';
-                noteInput.dataset.fab = d.fab;
-                noteInput.dataset.modele = d.modele;
-                noteInput.dataset.annee = d.annee;
-                noteInput.dataset.noteKey = 'notes_' + d.fab + '_' + d.modele + '_' + d.annee;
-                tdNotes.appendChild(noteInput);
+                tdNotes.style.textAlign = 'center';
+                tdNotes.style.padding = '4px';
+                var noteDot = document.createElement('span');
+                noteDot.className = 'db-note-dot';
+                noteDot.dataset.fab = d.fab;
+                noteDot.dataset.modele = d.modele;
+                noteDot.dataset.annee = d.annee;
+                noteDot.dataset.noteKey = 'notes_' + d.fab + '_' + d.modele + '_' + d.annee;
+                noteDot.title = 'Aucune note';
+                tdNotes.appendChild(noteDot);
                 tr.appendChild(tdNotes);
 
                 // (Cellule Codes produit retiree — edition uniquement via edit-machine.html)
@@ -1602,18 +1635,24 @@
             document.getElementById('db-next').disabled = end >= filtered.length;
             document.getElementById('db-page-info').textContent = (start + 1) + ' - ' + end + ' sur ' + filtered.length;
 
-            // Lazy-load notes for visible rows
-            var noteInputs = tbody.querySelectorAll('.db-note-input');
-            noteInputs.forEach(function(input) {
-                var noteKey = input.dataset.noteKey;
+            // Lazy-load notes for visible rows — set indicator state
+            var noteDots = tbody.querySelectorAll('.db-note-dot');
+            noteDots.forEach(function(dot) {
+                var noteKey = dot.dataset.noteKey;
                 fetch(API_URL + '?action=get&key=' + encodeURIComponent(noteKey))
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
-                        if (data.value) input.value = data.value;
+                        if (data.value && data.value.trim()) {
+                            dot.classList.add('has-note');
+                            dot.title = data.value;
+                        }
                     })
                     .catch(function() {
                         var local = localStorage.getItem(noteKey);
-                        if (local) input.value = local;
+                        if (local && local.trim()) {
+                            dot.classList.add('has-note');
+                            dot.title = local;
+                        }
                     });
             });
 
