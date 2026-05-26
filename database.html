@@ -1193,7 +1193,7 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 fullData = data;
-                // Populate type dropdown — placeholder vide par defaut, puis Tous, puis types
+                // Populate type dropdown — placeholder vide par defaut, puis types
                 var typeSelect = document.getElementById('db-type');
                 typeSelect.innerHTML = '';
                 // Option placeholder (vide = rien affiche)
@@ -1201,11 +1201,6 @@
                 optEmpty.value = '';
                 optEmpty.textContent = '— Selectionner un type —';
                 typeSelect.appendChild(optEmpty);
-                // Option "Tous les types"
-                var optAll = document.createElement('option');
-                optAll.value = '__ALL__';
-                optAll.textContent = 'Tous les types';
-                typeSelect.appendChild(optAll);
                 var TYPE_ORDER_PRIORITY = ['Excavatrice', 'Pompe a Beton'];
                 var allTypes = Object.keys(fullData);
                 var sortedTypes = TYPE_ORDER_PRIORITY.filter(function(t){ return allTypes.indexOf(t) >= 0; })
