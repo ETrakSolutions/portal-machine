@@ -197,6 +197,12 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
   background:transparent;color:var(--text-2);border-color:var(--border);
 }
 .btn-cancel-fancy:hover{background:var(--card-hover);color:var(--text)}
+.btn-danger-fancy{
+  background:linear-gradient(135deg,var(--rouge),#CC2222);color:#fff;
+  padding:0.6rem 1.2rem;border-radius:8px;font-weight:600;font-size:0.9rem;
+  cursor:pointer;border:none;transition:all 0.15s;
+}
+.btn-danger-fancy:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,68,68,0.35)}
 .modal h3{margin-bottom:1rem}
 .modal pre{
   background:var(--input);padding:1rem;border-radius:6px;
@@ -245,34 +251,35 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
   display:flex;justify-content:space-between;gap:1rem;align-items:center;
 }
 
-/* Sticky save bar — toujours visible en haut quand on scroll */
-.save-bar-sticky{
+/* Tabs + Save sur la meme ligne, sticky en haut */
+.tabs.tabs-with-save{
+  display:flex;justify-content:space-between;align-items:center;gap:1rem;
   position:sticky;top:75px;z-index:50;
-  display:flex;gap:0.6rem;justify-content:flex-end;align-items:center;
-  background:linear-gradient(180deg,var(--card),rgba(42,42,42,0.95));
-  padding:0.75rem 1rem;margin:-0.5rem -1.5rem 1rem -1.5rem;
+  background:linear-gradient(180deg,var(--card),rgba(42,42,42,0.97));
+  margin:0 -1.5rem 1.25rem -1.5rem;padding:0 1.5rem;
   border-bottom:1px solid var(--border);
   backdrop-filter:blur(8px);
-  border-radius:0;
 }
-.save-bar-sticky #btn-save-top{
+.tabs-buttons{display:flex;gap:0}
+.tabs-save-group{display:flex;gap:0.5rem;align-items:center;padding:0.4rem 0}
+.tabs-save-group #btn-save-top{
   background:linear-gradient(135deg,var(--vert),#00AA55);color:#000;
-  padding:0.55rem 1.1rem;font-weight:700;border:none;border-radius:6px;
-  cursor:pointer;font-size:0.92rem;transition:all 0.15s;
-  box-shadow:0 2px 8px rgba(0,204,102,0.3);
+  padding:0.5rem 1rem;font-weight:700;border:none;border-radius:6px;
+  cursor:pointer;font-size:0.88rem;transition:all 0.15s;
+  box-shadow:0 2px 6px rgba(0,204,102,0.25);
 }
-.save-bar-sticky #btn-save-top:hover:not(:disabled){
-  transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,204,102,0.45);
+.tabs-save-group #btn-save-top:hover:not(:disabled){
+  transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,204,102,0.4);
 }
-.save-bar-sticky #btn-save-top:disabled{
+.tabs-save-group #btn-save-top:disabled{
   background:#3a3a3a;color:#666;cursor:not-allowed;box-shadow:none;
 }
-.save-bar-sticky #btn-reset-top{
+.tabs-save-group #btn-reset-top{
   background:transparent;color:var(--text-2);border:1px solid var(--border);
-  padding:0.55rem 1rem;border-radius:6px;cursor:pointer;font-size:0.88rem;
+  padding:0.5rem 0.9rem;border-radius:6px;cursor:pointer;font-size:0.82rem;
 }
-.save-bar-sticky #btn-reset-top:hover:not(:disabled){background:var(--card-hover);color:var(--text)}
-.save-bar-sticky #btn-reset-top:disabled{opacity:0.4;cursor:not-allowed}
+.tabs-save-group #btn-reset-top:hover:not(:disabled){background:var(--card-hover);color:var(--text)}
+.tabs-save-group #btn-reset-top:disabled{opacity:0.4;cursor:not-allowed}
 .scope-banner{
   display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;
   background:rgba(0,98,204,0.1);padding:0.75rem 1rem;border-radius:6px;
@@ -381,6 +388,25 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     <div class="btn-row" style="justify-content:flex-end">
       <button class="secondary" onclick="document.getElementById('modal-delete').classList.remove('show')">Annuler</button>
       <button class="danger" id="del-confirm-btn">Supprimer definitivement</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete-line modal (suppression d'une ligne BOM avec choix de portee) -->
+<div class="modal-bg" id="modal-del-line">
+  <div class="modal modal-fancy" style="max-width:460px">
+    <div class="modal-header-icon" style="text-align:center;font-size:2.5rem;margin-bottom:0.5rem">🗑</div>
+    <h3 style="text-align:center;margin-bottom:0.5rem">Retirer cette ligne ?</h3>
+    <p id="del-line-detail" style="color:var(--text-2);text-align:center;margin-bottom:1rem;font-size:0.92rem">
+      <strong id="del-line-name">Code</strong> sera retire du Kit BOM.
+    </p>
+    <label id="del-line-allyears-label" style="display:none;align-items:center;gap:0.6rem;background:var(--input);padding:0.7rem 0.9rem;border-radius:6px;border:1px solid var(--border);cursor:pointer;margin-bottom:1rem;font-size:0.9rem">
+      <input type="checkbox" id="del-line-allyears" style="width:18px;height:18px;accent-color:var(--jaune);cursor:pointer">
+      <span>Appliquer a TOUTES les annees du modele (<span id="del-line-year-count">0</span> annees)</span>
+    </label>
+    <div class="btn-row" style="display:flex;gap:0.6rem;justify-content:flex-end">
+      <button id="del-line-cancel" class="btn-cancel-fancy" style="width:auto;padding:0.6rem 1.1rem">Annuler</button>
+      <button id="del-line-confirm" class="btn-danger-fancy">Retirer</button>
     </div>
   </div>
 </div>
@@ -1180,8 +1206,8 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     var yearCount = ALL_YEARS_FOR_MODEL.length;
 
     var scopeCountForTop = Object.keys(SCOPE_ALL_CODES).filter(function(k){return SCOPE_ALL_CODES[k];}).length;
-    var topSaveBar = canEdit ?
-      '<div class="save-bar-sticky" id="save-bar-top">' +
+    var saveButtonsInline = canEdit ?
+      '<div class="tabs-save-group">' +
         '<button id="btn-save-top" ' + (dirtyCount===0?'disabled':'') + '>💾 Sauvegarder (' + dirtyCount + ' chgmt)' + (scopeCountForTop > 0 ? ' [' + scopeCountForTop + ' multi-an]' : '') + '</button>' +
         '<button class="secondary" id="btn-reset-top" ' + (dirtyCount===0?'disabled':'') + '>Annuler</button>' +
       '</div>' : '';
@@ -1192,10 +1218,13 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
           '<h2>' + FAB + ' ' + MODEL + ' <span class="meta">(' + YEAR + ' &middot; ' + TYPE + ')</span></h2>' +
           '<div class="head-actions">' + actions + '</div>' +
         '</div>' +
-        readonlyBanner + flagBanner + topSaveBar +
-        '<div class="tabs">' +
-          '<button class="tab active" data-tab="bom">Kit BOM</button>' +
-          '<button class="tab" data-tab="specs">Specifications</button>' +
+        readonlyBanner + flagBanner +
+        '<div class="tabs tabs-with-save">' +
+          '<div class="tabs-buttons">' +
+            '<button class="tab active" data-tab="bom">Kit BOM</button>' +
+            '<button class="tab" data-tab="specs">Specifications</button>' +
+          '</div>' +
+          saveButtonsInline +
         '</div>' +
 
         '<div id="tab-bom">' +
@@ -1262,36 +1291,60 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
           render();
         });
       });
-      // Delete row buttons — confirme + demande si toutes annees ou juste cette machine
+      // Delete row buttons — ouvre le modal custom centre avec checkbox portee
       document.querySelectorAll('.row-del').forEach(function(btn){
         btn.addEventListener('click', function(){
           var kind = btn.dataset.kind;
+          var code = btn.dataset.code; // pour std
+          var customIdx = btn.dataset.custom; // pour custom
+
+          // Nom affiche dans le modal
+          var displayName = '';
+          if (kind === 'std' && code){
+            displayName = (BOM_NAMES[code] || code) + ' (' + (BOM_PN[code] || code) + ')';
+          } else if (kind === 'custom' && customIdx != null){
+            var c = CUSTOM_CURRENT[parseInt(customIdx)];
+            displayName = c ? ((c.desc || '') + ' (' + (c.pn || c.code) + ')') : 'cette ligne';
+          }
+          document.getElementById('del-line-name').textContent = displayName || 'cette ligne';
+
+          // Affiche la case 'toutes annees' uniquement si modele multi-annees
           var nYears = ALL_YEARS_FOR_MODEL.length;
-
-          // 1ere confirmation: vraiment supprimer?
-          if (!confirm('Retirer cette ligne du Kit BOM ?')) return;
-
-          // Si modele present sur >1 annee: demander la portee
-          var applyAllYears = false;
+          var label = document.getElementById('del-line-allyears-label');
+          var cb = document.getElementById('del-line-allyears');
           if (nYears > 1) {
-            applyAllYears = confirm(
-              'Appliquer la suppression a TOUTES les annees du modele (' + nYears + ' annees) ?\n\n' +
-              'OK = toutes les annees\n' +
-              'Annuler = uniquement annee ' + YEAR
-            );
+            label.style.display = 'flex';
+            document.getElementById('del-line-year-count').textContent = nYears;
+            cb.checked = false;
+          } else {
+            label.style.display = 'none';
+            cb.checked = false;
           }
 
-          if (kind === 'std'){
-            var code = btn.dataset.code;
-            if (REMOVED_CURRENT.indexOf(code) < 0) REMOVED_CURRENT.push(code);
-            if (applyAllYears) SCOPE_ALL_CODES[code] = true;
-          } else if (kind === 'custom'){
-            var idx = parseInt(btn.dataset.custom);
-            var customCode = CUSTOM_CURRENT[idx] ? CUSTOM_CURRENT[idx].code : null;
-            CUSTOM_CURRENT.splice(idx, 1);
-            if (applyAllYears && customCode) SCOPE_ALL_CODES[customCode] = true;
-          }
-          render();
+          // Configure le bouton Confirmer pour cette suppression
+          var confirmBtn = document.getElementById('del-line-confirm');
+          var cancelBtn = document.getElementById('del-line-cancel');
+          var modal = document.getElementById('modal-del-line');
+
+          function close(){ modal.classList.remove('show'); confirmBtn.onclick = null; cancelBtn.onclick = null; }
+
+          confirmBtn.onclick = function(){
+            var applyAllYears = cb.checked;
+            if (kind === 'std' && code){
+              if (REMOVED_CURRENT.indexOf(code) < 0) REMOVED_CURRENT.push(code);
+              if (applyAllYears) SCOPE_ALL_CODES[code] = true;
+            } else if (kind === 'custom' && customIdx != null){
+              var idx = parseInt(customIdx);
+              var customCode = CUSTOM_CURRENT[idx] ? CUSTOM_CURRENT[idx].code : null;
+              CUSTOM_CURRENT.splice(idx, 1);
+              if (applyAllYears && customCode) SCOPE_ALL_CODES[customCode] = true;
+            }
+            close();
+            render();
+          };
+          cancelBtn.onclick = close;
+
+          modal.classList.add('show');
         });
       });
       // Add line button
