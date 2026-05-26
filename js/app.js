@@ -472,7 +472,7 @@ function showResults(modele, type, fab, annee, specs, isCustom) {
             '0002': 'j',
             '0004': isMini ? 'r' : 'na',
             '0005': 'j',
-            '0008': hasSwing ? 'j' : 'na',
+            '0008': 'na', // Swing boom: N/A par defaut
             '0009': isDrain ? 'r' : 'na',
             '0070': 'na',
             '0304': modelUpper === 'TB216' ? 'r' : 'na'

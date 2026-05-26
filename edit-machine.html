@@ -442,7 +442,7 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     bom['0000']='r'; bom['0001']='j'; bom['0002']='j';
     bom['0004'] = isMini ? 'r' : 'na';
     bom['0005']='j';
-    bom['0008'] = hasSwing ? 'j' : 'na';
+    bom['0008'] = 'na'; // Swing boom: N/A par defaut, admin l'active manuellement si besoin
     var isDrain = DRAIN_PREFIXES.some(function(p){ return modUpper.indexOf(p.toUpperCase()) === 0; });
     bom['0009'] = isDrain ? 'r' : 'na';
     bom['0070']='na';
