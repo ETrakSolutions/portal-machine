@@ -20,12 +20,27 @@ body{
     linear-gradient(90deg,rgba(0,98,204,0.04) 1px,transparent 1px);
   background-size:20px 20px;
 }
+/* Header — coherent avec les autres pages du portail */
 header.top{
-  background:#085591;padding:1rem 2rem;display:flex;align-items:center;
-  justify-content:space-between;border-bottom:1px solid #0A6AAB;
+  background:#085591;border-bottom:1px solid #0A6AAB;
+  padding:0 2rem;height:75px;display:flex;align-items:center;
+  position:sticky;top:0;z-index:100;
 }
-header.top h1{font-size:1.2rem;font-weight:600}
+.header-content{
+  max-width:1200px;width:100%;margin:0 auto;display:flex;
+  align-items:center;justify-content:center;position:relative;
+}
+.header-back{
+  position:absolute;left:0;color:#fff;text-decoration:none;
+  font-size:0.8rem;font-weight:600;opacity:0.7;transition:all 0.2s;
+  line-height:1;display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border:1px solid rgba(255,255,255,0.2);border-radius:6px;
+}
+.header-back:hover{opacity:1;background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.4)}
+.logo-section{display:flex;align-items:center;justify-content:center}
+.header-logo{height:60px}
 .back-btn{
+  position:absolute;right:0;
   background:rgba(255,255,255,0.1);color:#fff;padding:0.4rem 0.9rem;
   border-radius:6px;text-decoration:none;font-size:0.85rem;font-weight:500;
   border:1px solid rgba(255,255,255,0.2);transition:all 0.15s;
@@ -254,8 +269,13 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
 <body>
 
 <header class="top">
-  <h1>Edition d'une machine</h1>
-  <a href="database.html" class="back-btn" onclick="if(history.length > 1){event.preventDefault();history.back();}">&larr; Retour a la base de donnees</a>
+  <div class="header-content">
+    <a href="index.html" class="header-back" title="Retour au Portail e-Trak">&larr; Portail</a>
+    <div class="logo-section">
+      <img src="assets/logo-white.png" alt="e-Trak | GRYB" class="header-logo">
+    </div>
+    <a href="database.html" class="back-btn" onclick="if(history.length > 1){event.preventDefault();history.back();}" title="Retour a la base de donnees">&larr; Base de donnees</a>
+  </div>
 </header>
 
 <main id="root">
