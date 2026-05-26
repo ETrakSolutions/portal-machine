@@ -1193,9 +1193,14 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 fullData = data;
-                // Populate type dropdown — "Tous" en premier, puis Excavatrice + Pompe en tete, reste alphabetique
+                // Populate type dropdown — placeholder vide par defaut, puis Tous, puis types
                 var typeSelect = document.getElementById('db-type');
                 typeSelect.innerHTML = '';
+                // Option placeholder (vide = rien affiche)
+                var optEmpty = document.createElement('option');
+                optEmpty.value = '';
+                optEmpty.textContent = '— Selectionner un type —';
+                typeSelect.appendChild(optEmpty);
                 // Option "Tous les types"
                 var optAll = document.createElement('option');
                 optAll.value = '__ALL__';
@@ -1218,16 +1223,39 @@
         function loadType() {
             var typeVal = document.getElementById('db-type').value;
             var isAllTypes = (typeVal === '__ALL__');
+            var isEmpty = !typeVal;
 
-            // Cacher la legende BOM en vue Tous (pas de BOM affiche)
+            // Cacher la legende BOM en vue Tous ou vide
             var legend = document.getElementById('db-legend');
-            if (legend) legend.style.display = isAllTypes ? 'none' : '';
+            if (legend) legend.style.display = (isAllTypes || isEmpty) ? 'none' : '';
 
-            // Desactiver le filtre annee en vue Tous (modeles de differents types/annees)
+            // Desactiver le filtre annee en vue Tous ou vide
             var anneeSel = document.getElementById('db-annee');
             if (anneeSel) {
-                anneeSel.disabled = isAllTypes;
-                if (isAllTypes) anneeSel.value = '';
+                anneeSel.disabled = isAllTypes || isEmpty;
+                if (isAllTypes || isEmpty) anneeSel.value = '';
+            }
+
+            // Vue vide: nettoyer la table et afficher un message
+            if (isEmpty) {
+                allData = [];
+                filtered = [];
+                var headerRow = document.querySelector('#db-table thead tr');
+                while (headerRow.children.length > 2) headerRow.removeChild(headerRow.lastChild);
+                var fabHeader = document.querySelector('#db-table thead th[data-col="fab"]');
+                if (fabHeader) fabHeader.style.display = '';
+                document.getElementById('db-table').classList.remove('fab-hidden');
+                var tbody = document.getElementById('db-tbody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#666;padding:3rem;font-style:italic">Selectionner un type de machine ci-dessus pour afficher les modeles</td></tr>';
+                // Reset fab and annee dropdowns
+                var fabSel = document.getElementById('db-fab');
+                if (fabSel) { fabSel.innerHTML = '<option value="">Tous</option>'; }
+                if (anneeSel) { anneeSel.innerHTML = '<option value="">Toutes</option>'; }
+                var pageInfo = document.getElementById('db-page-info');
+                if (pageInfo) pageInfo.textContent = '0 - 0 sur 0';
+                document.getElementById('db-prev').disabled = true;
+                document.getElementById('db-next').disabled = true;
+                return;
             }
             // Switch BOM codes based on type — only Excavatrice and Pompe a Beton have BOM
             if (typeVal === 'Pompe a Beton') {
