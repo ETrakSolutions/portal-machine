@@ -1193,9 +1193,14 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 fullData = data;
-                // Populate type dropdown — Excavatrice et Pompe a Beton en tete, puis le reste alphabetique
+                // Populate type dropdown — "Tous" en premier, puis Excavatrice + Pompe en tete, reste alphabetique
                 var typeSelect = document.getElementById('db-type');
                 typeSelect.innerHTML = '';
+                // Option "Tous les types"
+                var optAll = document.createElement('option');
+                optAll.value = '__ALL__';
+                optAll.textContent = 'Tous les types';
+                typeSelect.appendChild(optAll);
                 var TYPE_ORDER_PRIORITY = ['Excavatrice', 'Pompe a Beton'];
                 var allTypes = Object.keys(fullData);
                 var sortedTypes = TYPE_ORDER_PRIORITY.filter(function(t){ return allTypes.indexOf(t) >= 0; })
@@ -1212,22 +1217,41 @@
 
         function loadType() {
             var typeVal = document.getElementById('db-type').value;
+            var isAllTypes = (typeVal === '__ALL__');
             // Switch BOM codes based on type — only Excavatrice and Pompe a Beton have BOM
             if (typeVal === 'Pompe a Beton') {
                 BOM_CODES = POMPE_BOM_CODES;
             } else if (typeVal === 'Excavatrice') {
                 BOM_CODES = EXC_BOM_CODES;
             } else {
-                BOM_CODES = []; // No BOM for other types
+                BOM_CODES = []; // No BOM for other types or __ALL__
             }
             // Set spec columns for this type
-            currentSpecCols = SPEC_COLS[typeVal] || SPEC_COLS['Excavatrice'];
+            if (isAllTypes) {
+                currentSpecCols = []; // pas de specs en vue globale (differentes par type)
+            } else {
+                currentSpecCols = SPEC_COLS[typeVal] || SPEC_COLS['Excavatrice'];
+            }
 
             // Rebuild all dynamic headers (remove old BOM + spec + DEL columns, keep fab+modele)
             var headerRow = document.querySelector('#db-table thead tr');
             // Remove everything except fab and modele headers
             while (headerRow.children.length > 2) {
                 headerRow.removeChild(headerRow.lastChild);
+            }
+            // Add Type column (only in __ALL__ view)
+            if (isAllTypes) {
+                var thType = document.createElement('th');
+                thType.dataset.col = '_type';
+                thType.style.cssText = 'width:120px;min-width:100px;font-size:0.72rem;';
+                thType.innerHTML = 'Type <span class="sort-arrow">&#9650;</span>';
+                thType.style.cursor = 'pointer';
+                thType.addEventListener('click', function() {
+                    if (sortCol === '_type') { sortAsc = !sortAsc; }
+                    else { sortCol = '_type'; sortAsc = true; }
+                    applyFilters();
+                });
+                headerRow.appendChild(thType);
             }
             // Add BOM columns
             BOM_CODES.forEach(function(code) {
@@ -1301,27 +1325,31 @@
                     };
                 }
             };
-            var mapFn = SPEC_MAP[typeVal] || function(s) { return {}; };
-
-            var section = fullData[typeVal] || {};
             allData = [];
             var fabs = new Set();
             var years = new Set();
 
-            for (var fab in section) {
-                fabs.add(fab);
-                for (var annee in section[fab]) {
-                    years.add(annee);
-                    for (var modele in section[fab][annee]) {
-                        var s = section[fab][annee][modele];
-                        var entry = { fab: fab, modele: modele, annee: annee, harnais: '', bom: {}, _type: typeVal };
-                        for (var key in s) { entry['_spec_' + key] = s[key]; }
-                        var mapped = mapFn(s);
-                        for (var mk in mapped) { entry[mk] = mapped[mk]; }
-                        allData.push(entry);
+            // En vue "Tous les types": iterer sur tous les types. Sinon, juste le type selectionne.
+            var typesToLoad = isAllTypes ? Object.keys(fullData) : [typeVal];
+            typesToLoad.forEach(function(currentType){
+                if (currentType.startsWith('_')) return;  // skip meta keys
+                var mapFn = SPEC_MAP[currentType] || function(s) { return {}; };
+                var section = fullData[currentType] || {};
+                for (var fab in section) {
+                    fabs.add(fab);
+                    for (var annee in section[fab]) {
+                        years.add(annee);
+                        for (var modele in section[fab][annee]) {
+                            var s = section[fab][annee][modele];
+                            var entry = { fab: fab, modele: modele, annee: annee, harnais: '', bom: {}, _type: currentType };
+                            for (var key in s) { entry['_spec_' + key] = s[key]; }
+                            var mapped = mapFn(s);
+                            for (var mk in mapped) { entry[mk] = mapped[mk]; }
+                            allData.push(entry);
+                        }
                     }
                 }
-            }
+            });
 
             // Update fab filter
             var fabSelect = document.getElementById('db-fab');
@@ -1394,6 +1422,9 @@
             if (fabFilter) dbTable.classList.add('fab-hidden');
             else dbTable.classList.remove('fab-hidden');
 
+            var typeValRender = document.getElementById('db-type').value;
+            var isAllTypesRender = (typeValRender === '__ALL__');
+
             for (var i = start; i < end; i++) {
                 var d = filtered[i];
                 var tr = document.createElement('tr');
@@ -1423,6 +1454,15 @@
                     if (f === 'fab' && fabFilter) td.style.display = 'none';
                     tr.appendChild(td);
                 });
+
+                // Type column (en vue "Tous les types" seulement)
+                if (isAllTypesRender) {
+                    var tdType = document.createElement('td');
+                    tdType.className = 'db-fixed-col';
+                    tdType.style.color = '#A0A0A0';
+                    tdType.textContent = d._type || '';
+                    tr.appendChild(tdType);
+                }
 
                 // BOM columns — compute defaults per type
                 if (!d.bom || Object.keys(d.bom).length === 0) {
