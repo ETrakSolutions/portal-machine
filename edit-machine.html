@@ -662,9 +662,13 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     else if (dest) location.href = dest;
   }
 
-  // beforeunload natif (fallback uniquement pour fermeture d'onglet)
+  // beforeunload natif: utilise SEULEMENT pour fermeture d'onglet/navigateur
+  // (les navigateurs ne permettent pas un modal custom dans ce cas — seulement le popup natif)
+  // Pour la navigation interne (liens), c'est le modal custom #modal-unsaved qui prend le relais.
   window.addEventListener('beforeunload', function(e) {
     if (__bypassUnload) return;
+    // Si une navigation interne est en cours via le modal custom, ne pas afficher le natif
+    if (document.getElementById('modal-unsaved') && document.getElementById('modal-unsaved').classList.contains('show')) return;
     if (countChanges() > 0) {
       e.preventDefault();
       e.returnValue = '';
