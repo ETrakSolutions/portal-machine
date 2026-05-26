@@ -350,13 +350,14 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
 
 <!-- Save preview modal -->
 <div class="modal-bg" id="modal-save">
-  <div class="modal">
-    <h3>Apercu de la sauvegarde</h3>
+  <div class="modal modal-fancy" style="max-width:480px">
+    <div class="modal-header-icon" style="text-align:center;font-size:2.5rem;margin-bottom:0.5rem">💾</div>
+    <h3 style="text-align:center;margin-bottom:0.75rem">Confirmer la sauvegarde</h3>
     <div class="info" id="modal-save-info"></div>
-    <pre id="modal-save-content"></pre>
-    <div class="btn-row" style="justify-content:flex-end">
-      <button class="secondary" onclick="document.getElementById('modal-save').classList.remove('show')">Annuler</button>
-      <button onclick="commitChanges()">Confirmer la sauvegarde</button>
+    <pre id="modal-save-content" style="display:none"></pre>
+    <div class="btn-row" style="justify-content:flex-end;gap:0.6rem;margin-top:1rem">
+      <button class="btn-cancel-fancy" style="width:auto;padding:0.6rem 1.1rem" onclick="document.getElementById('modal-save').classList.remove('show')">Annuler</button>
+      <button class="btn-primary-fancy" style="width:auto;padding:0.6rem 1.2rem" onclick="commitChanges()">Confirmer la sauvegarde</button>
     </div>
   </div>
 </div>
