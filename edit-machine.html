@@ -294,12 +294,22 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
 .scope-banner.active .years-list{color:var(--jaune)}
 
 .harnais-row{
-  margin-top:1.5rem;padding:1rem;background:var(--input);border-radius:6px;
-  border:1px solid var(--border);
+  display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;
+  padding:0.55rem 0.85rem;margin-bottom:0.85rem;
+  background:var(--input);border-radius:6px;border:1px solid var(--border);
 }
-.harnais-row label{display:block;font-size:0.75rem;color:var(--text-2);
-  text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem}
-.harnais-row select{max-width:340px}
+.harnais-row label{
+  font-size:0.8rem;color:var(--text);font-weight:600;
+  text-transform:none;letter-spacing:0;margin:0;flex-shrink:0;
+}
+.harnais-row select{
+  background:var(--card);color:var(--text);border:1px solid var(--border);
+  border-radius:5px;padding:0.35rem 0.55rem;font-size:0.85rem;flex:1;min-width:220px;max-width:340px;
+}
+.harnais-row select:focus{outline:none;border-color:var(--accent)}
+.harnais-default{
+  color:var(--text-3);font-size:0.76rem;font-style:italic;
+}
 
 /* Codes produit */
 .pc-list{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem}
@@ -1141,11 +1151,12 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
       var opts = HARNAIS_OPTIONS.map(function(o){
         return '<option value="' + o.v + '"' + (o.v===harn?' selected':'') + '>' + o.l + '</option>';
       }).join('');
+      var defHarnLabel = defHarn ? (HARNAIS_OPTIONS.find(function(o){return o.v===defHarn;})||{l:defHarn}).l : '';
       harnaisHtml =
         '<div class="harnais-row">' +
-          '<label>Harnais de coupure' + (harn !== initHarn ? ' <span style="color:var(--accent);text-transform:none;letter-spacing:0">&#9679; modifie</span>' : '') + '</label>' +
+          '<label>Harnais :' + (harn !== initHarn ? ' <span style="color:var(--accent);text-transform:none;letter-spacing:0;font-weight:400">&#9679; modifie</span>' : '') + '</label>' +
           '<select id="harnais-sel"' + (canEdit?'':' disabled') + '>' + opts + '</select>' +
-          (defHarn ? '<div style="margin-top:0.4rem;color:var(--text-3);font-size:0.78rem">Defaut suggere : ' + (HARNAIS_OPTIONS.find(function(o){return o.v===defHarn;})||{l:defHarn}).l + '</div>' : '') +
+          (defHarn ? '<span class="harnais-default">Defaut : ' + defHarnLabel + '</span>' : '') +
         '</div>';
     }
 
@@ -1229,6 +1240,7 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
         '</div>' +
 
         '<div id="tab-bom">' +
+          harnaisHtml +
           (hasBom
             ? '<table class="bom-table">' +
                 '<thead><tr><th style="width:130px">Part Number</th><th>Description</th><th style="width:200px">Statut</th>' +
@@ -1243,7 +1255,6 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
                   '</div>'
                 : '')
             : '<p style="color:var(--text-3);padding:1rem 0">Aucun code BOM defini pour ce type de machine.</p>') +
-          harnaisHtml +
           '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">' +
             '<label style="display:block;font-size:0.75rem;color:var(--text-2);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Notes sur ce modele</label>' +
             '<textarea id="notes-area" class="notes-area"' + (canEdit?'':' readonly') + '>' + (NOTES_CURRENT||'').replace(/</g,'&lt;') + '</textarea>' +
