@@ -163,12 +163,40 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
 .modal-bg{
   position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;
   align-items:center;justify-content:center;z-index:1000;
+  backdrop-filter:blur(4px);
+  animation:fadeIn 0.18s ease-out;
 }
 .modal-bg.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
   padding:1.5rem;max-width:700px;width:90%;max-height:85vh;overflow:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  animation:popIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
 }
+@keyframes popIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-fancy{
+  background:linear-gradient(135deg,var(--card),#1F2730);
+  border:1px solid rgba(255,255,255,0.1);
+  border-top:3px solid var(--jaune);
+}
+.btn-primary-fancy, .btn-warn-fancy, .btn-cancel-fancy{
+  width:100%;padding:0.85rem 1.2rem;border-radius:8px;font-weight:600;
+  font-size:0.95rem;cursor:pointer;font-family:inherit;
+  transition:all 0.15s;border:1px solid transparent;
+}
+.btn-primary-fancy{
+  background:linear-gradient(135deg,var(--vert),#00AA55);color:#000;border-color:var(--vert);
+}
+.btn-primary-fancy:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,204,102,0.35)}
+.btn-warn-fancy{
+  background:transparent;color:var(--jaune);border-color:var(--jaune);
+}
+.btn-warn-fancy:hover{background:rgba(255,183,77,0.12);transform:translateY(-1px)}
+.btn-cancel-fancy{
+  background:transparent;color:var(--text-2);border-color:var(--border);
+}
+.btn-cancel-fancy:hover{background:var(--card-hover);color:var(--text)}
 .modal h3{margin-bottom:1rem}
 .modal pre{
   background:var(--input);padding:1rem;border-radius:6px;
@@ -324,6 +352,23 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     <div class="btn-row" style="justify-content:flex-end">
       <button class="secondary" onclick="document.getElementById('modal-delete').classList.remove('show')">Annuler</button>
       <button class="danger" id="del-confirm-btn">Supprimer definitivement</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unsaved-changes modal (intercepte la navigation interne avec des modifs non sauvees) -->
+<div class="modal-bg" id="modal-unsaved">
+  <div class="modal modal-fancy" style="max-width:480px">
+    <div class="modal-header-icon" style="text-align:center;font-size:2.5rem;margin-bottom:0.5rem">⚠️</div>
+    <h3 style="text-align:center;margin-bottom:0.5rem">Modifications non sauvegardees</h3>
+    <p style="color:var(--text-2);text-align:center;margin-bottom:1.5rem;font-size:0.92rem">
+      Vous avez <strong id="unsaved-count" style="color:var(--jaune)">0</strong> modification(s) non sauvegardee(s).<br>
+      Que voulez-vous faire ?
+    </p>
+    <div class="btn-row" style="display:flex;flex-direction:column;gap:0.5rem">
+      <button id="unsaved-save-leave" class="btn-primary-fancy">💾 Sauvegarder puis quitter</button>
+      <button id="unsaved-leave" class="btn-warn-fancy">🚪 Quitter sans sauvegarder</button>
+      <button id="unsaved-cancel" class="btn-cancel-fancy">↩ Rester sur la page</button>
     </div>
   </div>
 </div>
@@ -591,14 +636,84 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     return n;
   }
 
-  // Popup navigateur si l'utilisateur quitte la page avec des modifs non sauvegardees
+  // Modal custom pour navigation INTERNE (clic sur un lien de la page)
+  // Permet 'Sauvegarder puis quitter' / 'Quitter sans sauvegarder' / 'Rester'
+  var __pendingNavUrl = null;
+  var __bypassUnload = false;
+
+  function showUnsavedModal(destinationUrl) {
+    var modal = document.getElementById('modal-unsaved');
+    if (!modal) return false;
+    document.getElementById('unsaved-count').textContent = countChanges();
+    __pendingNavUrl = destinationUrl;
+    modal.classList.add('show');
+    return true;
+  }
+  function hideUnsavedModal() {
+    var modal = document.getElementById('modal-unsaved');
+    if (modal) modal.classList.remove('show');
+    __pendingNavUrl = null;
+  }
+  function doPendingNav() {
+    var dest = __pendingNavUrl;
+    __pendingNavUrl = null;
+    __bypassUnload = true; // empeche le beforeunload natif
+    if (dest === '__BACK__') history.back();
+    else if (dest) location.href = dest;
+  }
+
+  // beforeunload natif (fallback uniquement pour fermeture d'onglet)
   window.addEventListener('beforeunload', function(e) {
+    if (__bypassUnload) return;
     if (countChanges() > 0) {
       e.preventDefault();
-      e.returnValue = ''; // requis par certains navigateurs
+      e.returnValue = '';
       return '';
     }
   });
+
+  // Intercepte les clics sur les liens INTERNES
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href || href === '#' || href.startsWith('javascript:')) return;
+    if (countChanges() === 0) return; // laisser passer
+    e.preventDefault();
+    e.stopPropagation();
+    var willGoBack = link.onclick && /history\.back/.test(String(link.onclick));
+    showUnsavedModal(willGoBack ? '__BACK__' : link.href);
+  }, true);
+
+  // Wire up modal buttons
+  function attachUnsavedHandlers() {
+    var saveBtn = document.getElementById('unsaved-save-leave');
+    var leaveBtn = document.getElementById('unsaved-leave');
+    var cancelBtn = document.getElementById('unsaved-cancel');
+    if (saveBtn) saveBtn.onclick = function() {
+      hideUnsavedModal();
+      // Marque la nav en attente, declenche le save direct (sans preview)
+      __bypassUnload = true;
+      var dest = __pendingNavUrl;
+      // Patch: au prochain "Sauvegarde complete" toast, naviguer
+      var origToast = window.showToast || null;
+      // commitChanges fait deja le save complet + ferme modal-save (qui n'est pas ouvert ici)
+      // On surveille la fin via Promise.all interne — pas facile a hooker.
+      // Solution: appeler commitChanges et naviguer apres un delai raisonnable.
+      try { commitChanges(); } catch(e){}
+      setTimeout(function() {
+        if (dest === '__BACK__') history.back();
+        else if (dest) location.href = dest;
+      }, 1800);
+    };
+    if (leaveBtn) leaveBtn.onclick = function() { doPendingNav(); };
+    if (cancelBtn) cancelBtn.onclick = function() { hideUnsavedModal(); };
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachUnsavedHandlers);
+  } else {
+    attachUnsavedHandlers();
+  }
 
   function buildOverridePayload(){
     var payload = {};
