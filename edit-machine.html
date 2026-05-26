@@ -584,8 +584,21 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     Object.keys(SPECS_CURRENT).forEach(function(k){
       if (SPECS_CURRENT[k] !== SPECS_INITIAL[k]) n++;
     });
+    // Chaque code en mode "Toutes annees" = 1 modification a propager
+    Object.keys(SCOPE_ALL_CODES).forEach(function(k){
+      if (SCOPE_ALL_CODES[k]) n++;
+    });
     return n;
   }
+
+  // Popup navigateur si l'utilisateur quitte la page avec des modifs non sauvegardees
+  window.addEventListener('beforeunload', function(e) {
+    if (countChanges() > 0) {
+      e.preventDefault();
+      e.returnValue = ''; // requis par certains navigateurs
+      return '';
+    }
+  });
 
   function buildOverridePayload(){
     var payload = {};
@@ -642,20 +655,23 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
     var customChanged = !customSame(CUSTOM_CURRENT, CUSTOM_INITIAL);
     BOM_CODES.forEach(function(c){ if (BOM_CURRENT[c] !== BOM_INITIAL[c]) bomChanged = true; });
 
+    var scopedCodes = Object.keys(SCOPE_ALL_CODES).filter(function(k){ return SCOPE_ALL_CODES[k]; });
+
     // 1) Current year: save full override (all changes apply to this year)
-    if (bomChanged || harnaisChanged || removedChanged || customChanged){
+    //    Aussi sauvegarder si seul SCOPE est actif (assure que l'override de cette annee est aussi a jour)
+    if (bomChanged || harnaisChanged || removedChanged || customChanged || scopedCodes.length > 0){
       promises.push(apiSave(bomKey(), buildOverridePayload()));
     }
 
-    // 2) Other years: for each code in SCOPE_ALL_CODES that has actually changed, merge into other years' overrides
-    var scopedCodes = Object.keys(SCOPE_ALL_CODES).filter(function(k){ return SCOPE_ALL_CODES[k]; });
+    // 2) Other years: pour chaque code en mode "Toutes annees", propager la VALEUR ACTUELLE
+    //    (qu'elle ait change cette annee ou non) vers les autres annees
     if (scopedCodes.length > 0 && ALL_YEARS_FOR_MODEL.length > 1){
       ALL_YEARS_FOR_MODEL.filter(function(y){ return y !== YEAR; }).forEach(function(yr){
         // Deep clone to avoid mutating cached OTHER_OVERRIDES
         var ov = JSON.parse(JSON.stringify(OTHER_OVERRIDES[yr] || {}));
         scopedCodes.forEach(function(code){
-          // Standard BOM code change
-          if (BOM_CODES.indexOf(code) >= 0 && BOM_CURRENT[code] !== BOM_INITIAL[code]){
+          // Standard BOM code: propager la valeur actuelle (BOM_CURRENT[code])
+          if (BOM_CODES.indexOf(code) >= 0){
             if (BOM_CURRENT[code] === BOM_DEFAULTS[code]) delete ov[code];
             else ov[code] = BOM_CURRENT[code];
           }
@@ -1167,13 +1183,16 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
           var code = cb.dataset.scope;
           if (cb.checked) SCOPE_ALL_CODES[code] = true;
           else delete SCOPE_ALL_CODES[code];
-          // Re-render to update the save button label
+          // Mettre a jour bouton Save + Reset (toggle = modification)
           var dc = countChanges();
           var btn = document.getElementById('btn-save');
           var scopeCount = Object.keys(SCOPE_ALL_CODES).filter(function(k){return SCOPE_ALL_CODES[k];}).length;
           if (btn){
+            btn.disabled = dc===0;
             btn.innerHTML = '💾 Sauvegarder (' + dc + ' chgmt)' + (scopeCount > 0 ? ' [' + scopeCount + ' multi-an]' : '');
           }
+          var rst = document.getElementById('btn-reset');
+          if (rst) rst.disabled = dc===0;
         });
       });
 
