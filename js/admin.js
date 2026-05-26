@@ -694,7 +694,7 @@ function renderUsers() {
 // === Voyant d'activite : heartbeat + load ===
 // Charge le dernier timestamp d'activite pour chaque user et met a jour le voyant
 function loadUserActiveStatus() {
-    var ACTIVE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+    var ACTIVE_THRESHOLD_MS = 12 * 60 * 1000; // 12 minutes (ping toutes les 10 min + 2 min marge)
     var now = Date.now();
     document.querySelectorAll('.user-active-dot').forEach(function(dot) {
         var email = dot.dataset.email;

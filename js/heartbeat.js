@@ -26,7 +26,7 @@
       }).catch(function(){});
     }
     ping(); // immediate
-    setInterval(ping, 60000); // every 60s
+    setInterval(ping, 10 * 60 * 1000); // every 10 minutes
   };
 
   if (document.readyState === 'loading') {
