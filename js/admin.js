@@ -694,8 +694,18 @@ function renderUsers() {
 // === Voyant d'activite : heartbeat + load ===
 // Charge le dernier timestamp d'activite pour chaque user et met a jour le voyant
 function loadUserActiveStatus() {
-    var ACTIVE_THRESHOLD_MS = 12 * 60 * 1000; // 12 minutes (ping toutes les 10 min + 2 min marge)
+    var PING_THRESHOLD_MS = 12 * 60 * 1000;     // 12 min (= 10 min interval + 2 min marge)
+    var ACTIVITY_THRESHOLD_MS = 3 * 60 * 1000;   // 3 min sans interaction = inactif
     var now = Date.now();
+    function fmtAgo(ms) {
+        var s = Math.round(ms/1000);
+        if (s < 60) return s + 's';
+        var m = Math.round(s/60);
+        if (m < 60) return m + ' min';
+        var h = Math.round(m/60);
+        if (h < 24) return h + 'h';
+        return Math.round(h/24) + 'j';
+    }
     document.querySelectorAll('.user-active-dot').forEach(function(dot) {
         var email = dot.dataset.email;
         if (!email) return;
@@ -705,21 +715,40 @@ function loadUserActiveStatus() {
             .then(function(data) {
                 if (!data.value) {
                     dot.style.background = '#444';
-                    dot.title = 'Jamais connecte ou inactif';
+                    dot.style.boxShadow = 'none';
+                    dot.title = 'Jamais connecte';
                     return;
                 }
-                var ts = new Date(data.value).getTime();
-                if (isNaN(ts)) { dot.style.background = '#444'; dot.title = 'Inconnu'; return; }
-                var diff = now - ts;
-                if (diff < ACTIVE_THRESHOLD_MS) {
+                // Nouveau format: JSON {lastPing, lastActivity}
+                // Ancien format: ISO timestamp (compatibilite)
+                var info;
+                try { info = JSON.parse(data.value); }
+                catch(e) { info = { lastPing: data.value, lastActivity: data.value }; }
+                if (!info || typeof info !== 'object') {
+                    info = { lastPing: data.value, lastActivity: data.value };
+                }
+                var pingTs = new Date(info.lastPing).getTime();
+                var activityTs = new Date(info.lastActivity || info.lastPing).getTime();
+                if (isNaN(pingTs)) { dot.style.background = '#444'; dot.title = 'Donnees invalides'; return; }
+
+                var pingDiff = now - pingTs;
+                var activityDiff = now - activityTs;
+
+                if (pingDiff > PING_THRESHOLD_MS) {
+                    // Pas de ping recent — deconnecte
+                    dot.style.background = '#444';
+                    dot.style.boxShadow = 'none';
+                    dot.title = 'Deconnecte (dernier ping il y a ' + fmtAgo(pingDiff) + ')';
+                } else if (activityDiff > ACTIVITY_THRESHOLD_MS) {
+                    // Ping recent mais pas d'activite — page ouverte mais inactif
+                    dot.style.background = '#FFB74D';
+                    dot.style.boxShadow = '0 0 6px rgba(255,183,77,0.6)';
+                    dot.title = 'Page ouverte mais inactif depuis ' + fmtAgo(activityDiff);
+                } else {
+                    // Actif maintenant
                     dot.style.background = '#00CC66';
                     dot.style.boxShadow = '0 0 6px rgba(0,204,102,0.7)';
-                    dot.title = 'Actif maintenant (dernier ping: ' + Math.round(diff/1000) + 's)';
-                } else {
-                    dot.style.background = '#444';
-                    var mins = Math.round(diff / 60000);
-                    var lastSeen = mins < 60 ? mins + ' min' : Math.round(mins/60) + 'h';
-                    dot.title = 'Dernier passage il y a ' + lastSeen;
+                    dot.title = 'Actif (interaction il y a ' + fmtAgo(activityDiff) + ')';
                 }
             })
             .catch(function() {});
