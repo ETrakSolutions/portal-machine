@@ -1211,9 +1211,53 @@
                     opt.textContent = t;
                     typeSelect.appendChild(opt);
                 });
+
+                // Restaurer etat sauvegarde (back depuis edit-machine.html)
+                try {
+                    var savedState = JSON.parse(sessionStorage.getItem('db_state') || 'null');
+                    if (savedState) {
+                        if (savedState.type) document.getElementById('db-type').value = savedState.type;
+                        if (savedState.sortCol) sortCol = savedState.sortCol;
+                        if (typeof savedState.sortAsc === 'boolean') sortAsc = savedState.sortAsc;
+                        if (typeof savedState.currentPage === 'number') currentPage = savedState.currentPage;
+                        // fab/annee/search seront restaures apres loadType (qui les re-cree)
+                        window.__pendingState = savedState;
+                    }
+                } catch(e){}
+
                 loadType();
+                // Apres loadType (qui peuple fab/annee dropdowns), restaurer ces filtres
+                if (window.__pendingState) {
+                    var ps = window.__pendingState;
+                    if (ps.fab) { var fs = document.getElementById('db-fab'); if (fs) fs.value = ps.fab; }
+                    if (ps.annee) { var ays = document.getElementById('db-annee'); if (ays) ays.value = ps.annee; }
+                    if (ps.search) { var ss = document.getElementById('db-search'); if (ss) ss.value = ps.search; }
+                    applyFilters();
+                    // applyFilters reset currentPage a 0 — le restaurer apres
+                    if (typeof ps.currentPage === 'number' && ps.currentPage > 0) {
+                        currentPage = ps.currentPage;
+                        renderPage();
+                    }
+                    delete window.__pendingState;
+                }
                 loadFlags();
             });
+
+        // Sauvegarder l'etat courant pour pouvoir le restaurer apres back/forward
+        function saveDbState() {
+            try {
+                var state = {
+                    type: document.getElementById('db-type').value,
+                    fab: document.getElementById('db-fab').value,
+                    annee: document.getElementById('db-annee').value,
+                    search: document.getElementById('db-search').value,
+                    currentPage: currentPage,
+                    sortCol: sortCol,
+                    sortAsc: sortAsc
+                };
+                sessionStorage.setItem('db_state', JSON.stringify(state));
+            } catch(e){}
+        }
 
         function loadType() {
             var typeVal = document.getElementById('db-type').value;
@@ -1481,6 +1525,7 @@
                                     '&model=' + encodeURIComponent(d.modele);
                         link.title = 'Editer ' + d.fab + ' ' + d.modele + ' (' + d.annee + ')';
                         link.textContent = d.modele;
+                        link.addEventListener('click', saveDbState);
                         td.appendChild(link);
                         var yearSpan = document.createElement('span');
                         yearSpan.className = 'db-modele-year';

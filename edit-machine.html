@@ -255,7 +255,7 @@ button.small{padding:0.4rem 0.8rem;font-size:0.82rem}
 
 <header class="top">
   <h1>Edition d'une machine</h1>
-  <a href="database.html" class="back-btn">&larr; Retour a la base de donnees</a>
+  <a href="database.html" class="back-btn" onclick="if(history.length > 1){event.preventDefault();history.back();}">&larr; Retour a la base de donnees</a>
 </header>
 
 <main id="root">
