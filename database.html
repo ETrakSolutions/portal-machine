@@ -418,11 +418,11 @@
                 </div>
             </div>
 
-            <div class="db-legend">
+            <div class="db-legend" id="db-legend">
                 <span class="db-legend-item"><span class="bom-token bom-r"></span> <span data-i18n="db.legend_obligatoire">Obligatoire</span></span>
                 <span class="db-legend-item"><span class="bom-token bom-j"></span> <span data-i18n="db.legend_optionnel">Optionnel</span></span>
                 <span class="db-legend-item"><span class="bom-token bom-na">-</span> <span data-i18n="db.legend_na">N/A</span></span>
-                <span style="color:#555;">| Cliquer pour modifier (admin)</span>
+                <span style="color:#555;">| Edition via la page d'edition (cliquer sur le modele)</span>
             </div>
             <div id="db-stats" class="db-stats"></div>
 
@@ -1218,6 +1218,17 @@
         function loadType() {
             var typeVal = document.getElementById('db-type').value;
             var isAllTypes = (typeVal === '__ALL__');
+
+            // Cacher la legende BOM en vue Tous (pas de BOM affiche)
+            var legend = document.getElementById('db-legend');
+            if (legend) legend.style.display = isAllTypes ? 'none' : '';
+
+            // Desactiver le filtre annee en vue Tous (modeles de differents types/annees)
+            var anneeSel = document.getElementById('db-annee');
+            if (anneeSel) {
+                anneeSel.disabled = isAllTypes;
+                if (isAllTypes) anneeSel.value = '';
+            }
             // Switch BOM codes based on type — only Excavatrice and Pompe a Beton have BOM
             if (typeVal === 'Pompe a Beton') {
                 BOM_CODES = POMPE_BOM_CODES;
@@ -1268,10 +1279,14 @@
                 thH.textContent = 'Harnais';
                 headerRow.appendChild(thH);
             }
-            // Add Notes (API) column
+            // Add Notes column — large en vue Tous (etire pour remplir l'espace), compact en vue type
             var thNotes = document.createElement('th');
             thNotes.textContent = 'Notes';
-            thNotes.style.cssText = 'width:50px;min-width:50px;text-align:center;font-size:0.65rem;';
+            if (isAllTypes) {
+                thNotes.style.cssText = 'min-width:200px;text-align:left;font-size:0.65rem;';
+            } else {
+                thNotes.style.cssText = 'width:50px;min-width:50px;text-align:center;font-size:0.65rem;';
+            }
             headerRow.appendChild(thNotes);
 
             // (Colonne Codes produit retiree — edition uniquement via edit-machine.html)
@@ -1509,10 +1524,16 @@
 
                 // (Spec fields deplaces a la fin du row — apres DEL)
 
-                // Notes column — temoin lumineux (s'active quand une note existe)
+                // Notes column — temoin lumineux + preview texte en vue Tous
                 var tdNotes = document.createElement('td');
-                tdNotes.style.textAlign = 'center';
-                tdNotes.style.padding = '4px';
+                tdNotes.style.padding = '4px 8px';
+                if (isAllTypesRender){
+                    tdNotes.style.textAlign = 'left';
+                    tdNotes.style.color = '#888';
+                    tdNotes.style.fontSize = '0.75rem';
+                } else {
+                    tdNotes.style.textAlign = 'center';
+                }
                 var noteDot = document.createElement('span');
                 noteDot.className = 'db-note-dot';
                 noteDot.dataset.fab = d.fab;
@@ -1521,6 +1542,12 @@
                 noteDot.dataset.noteKey = 'notes_' + d.fab + '_' + d.modele + '_' + d.annee;
                 noteDot.title = 'Aucune note';
                 tdNotes.appendChild(noteDot);
+                if (isAllTypesRender){
+                    var notePreview = document.createElement('span');
+                    notePreview.className = 'db-note-preview';
+                    notePreview.style.marginLeft = '6px';
+                    tdNotes.appendChild(notePreview);
+                }
                 tr.appendChild(tdNotes);
 
                 // (Cellule Codes produit retiree — edition uniquement via edit-machine.html)
@@ -1675,16 +1702,21 @@
             document.getElementById('db-next').disabled = end >= filtered.length;
             document.getElementById('db-page-info').textContent = (start + 1) + ' - ' + end + ' sur ' + filtered.length;
 
-            // Lazy-load notes for visible rows — set indicator state
+            // Lazy-load notes for visible rows — set indicator state + preview text
             var noteDots = tbody.querySelectorAll('.db-note-dot');
             noteDots.forEach(function(dot) {
                 var noteKey = dot.dataset.noteKey;
+                var previewEl = dot.nextElementSibling; // .db-note-preview if present
                 fetch(API_URL + '?action=get&key=' + encodeURIComponent(noteKey))
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (data.value && data.value.trim()) {
                             dot.classList.add('has-note');
                             dot.title = data.value;
+                            if (previewEl && previewEl.classList.contains('db-note-preview')) {
+                                previewEl.textContent = data.value.slice(0, 80);
+                                previewEl.style.color = '#bbb';
+                            }
                         }
                     })
                     .catch(function() {
@@ -1692,6 +1724,10 @@
                         if (local && local.trim()) {
                             dot.classList.add('has-note');
                             dot.title = local;
+                            if (previewEl && previewEl.classList.contains('db-note-preview')) {
+                                previewEl.textContent = local.slice(0, 80);
+                                previewEl.style.color = '#bbb';
+                            }
                         }
                     });
             });
