@@ -118,6 +118,12 @@ function showAdminSection() {
     document.getElementById('hub-nav').style.display = 'none';
     document.getElementById('admin-content').style.display = 'block';
     document.querySelector('.admin-hero').style.display = 'none';
+    // Affiche le bouton "Retour au hub" dans le header pour ressembler aux autres tuiles
+    var hb = document.getElementById('admin-header-back');
+    if (hb) {
+        hb.style.display = '';
+        hb.onclick = function(e) { e.preventDefault(); showHubSection(); };
+    }
     loadUsers();
     loadVendeurs();
     loadSalesEmails();
@@ -125,6 +131,14 @@ function showAdminSection() {
     loadNotesEmails();
     renderPermTable();
     loadAllowedTypes();
+}
+
+function showHubSection() {
+    document.getElementById('hub-nav').style.display = '';
+    document.getElementById('admin-content').style.display = 'none';
+    document.querySelector('.admin-hero').style.display = '';
+    var hb = document.getElementById('admin-header-back');
+    if (hb) hb.style.display = 'none';
 }
 
 // ---- PERMISSIONS TABLE (editable) ----
@@ -209,6 +223,8 @@ function hideAdminSection() {
     document.getElementById('hub-nav').style.display = 'grid';
     document.getElementById('admin-content').style.display = 'none';
     document.querySelector('.admin-hero').style.display = 'block';
+    var hb = document.getElementById('admin-header-back');
+    if (hb) hb.style.display = 'none';
 }
 
 // ---- WELCOME OVERLAY ----
