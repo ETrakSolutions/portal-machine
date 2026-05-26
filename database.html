@@ -1229,11 +1229,7 @@
             thFlag.textContent = '\uD83D\uDEA9';
             headerRow.appendChild(thFlag);
 
-            // Add DEL column
-            var thDel = document.createElement('th');
-            thDel.style.cssText = 'width:30px;min-width:30px;text-align:center;font-size:0.6rem;';
-            thDel.textContent = 'DEL';
-            headerRow.appendChild(thDel);
+            // (Colonne DEL retiree — suppression via edit-machine.html)
 
             // Add spec columns (deplacees a la fin)
             currentSpecCols.forEach(function(col) {
@@ -1478,19 +1474,7 @@
                 }
                 tr.appendChild(tdFlag);
 
-                // Delete button (admin only)
-                var tdDel = document.createElement('td');
-                tdDel.style.textAlign = 'center';
-                tdDel.style.padding = '4px';
-                if (canEdit) {
-                    var btn = document.createElement('button');
-                    btn.className = 'db-delete-btn';
-                    btn.dataset.idx = dataIdx;
-                    btn.textContent = '\u2715';
-                    btn.title = 'Supprimer ' + d.fab + ' ' + d.modele + ' (' + d.annee + ')';
-                    tdDel.appendChild(btn);
-                }
-                tr.appendChild(tdDel);
+                // (Cellule DEL retiree \u2014 suppression via edit-machine.html)
 
                 // Spec fields (deplaces a la fin)
                 currentSpecCols.forEach(function(col) {
@@ -1583,9 +1567,9 @@
                                 rowEl = probeRow ? probeRow.closest('tr') : null;
                             }
                             if (rowEl){
-                                // Spec cells at the END of the row (after Notes/Flag/Del)
-                                // Layout: Fab(0) Modele(1) BOM(2..N+1) Harnais(N+2 for Exc) Notes Flag Del Specs
-                                var startCol = 2 + BOM_CODES.length + (d._type === 'Excavatrice' ? 1 : 0) + 3;
+                                // Spec cells at the END of the row (after Notes/Flag)
+                                // Layout: Fab(0) Modele(1) BOM(2..N+1) Harnais(N+2 for Exc) Notes Flag Specs
+                                var startCol = 2 + BOM_CODES.length + (d._type === 'Excavatrice' ? 1 : 0) + 2;
                                 currentSpecCols.forEach(function(col, i){
                                     var td = rowEl.children[startCol + i];
                                     if (td) td.textContent = d[col.key] || '';
