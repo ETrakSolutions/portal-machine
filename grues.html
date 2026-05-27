@@ -107,64 +107,87 @@
 .status-discontinue { color: #888; font-style: italic; }
 .status-limite { color: #FFD600; font-size: 0.74rem; }
 
-/* ===== Responsive : mobile ===== */
-@media (max-width:768px) {
-    header { padding: 0 1rem !important; height: 60px !important; }
-    .header-logo { height: 44px !important; }
-    .header-back { padding: 4px 10px !important; font-size: 0.72rem !important; }
-    main { padding: 0.75rem 0.5rem !important; }
-    .selector-section { padding: 0.5rem 0.75rem !important; border-radius: 6px !important; }
-    .intro-row { gap: 0.5rem !important; margin-bottom: 0.75rem !important; }
-    .section-title { font-size: 0.95rem !important; }
-    .preview-sub { display: none; }
-    .db-controls {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 0.5rem !important;
-    }
-    .db-controls .db-control-group { min-width: 0 !important; }
-    .db-controls .db-control-group:has(#db-search),
-    .db-controls .db-control-group:has(#db-export) {
-        grid-column: 1 / -1;
-    }
-    .db-control-group select,
-    .db-control-group input { min-width: 0 !important; width: 100% !important; }
-    .db-search { min-width: 0 !important; }
-    .db-table { font-size: 0.74rem !important; }
-    .db-table thead th { font-size: 0.6rem !important; padding: 5px 5px !important; height: 38px !important; }
-    .db-table tbody td { padding: 5px 6px !important; font-size: 0.72rem !important; }
-    .db-table thead th:nth-child(1), .db-table tbody td:nth-child(1) { left: 0; }
-    .db-table thead th:nth-child(2), .db-table tbody td:nth-child(2) { left: 78px !important; }
-    /* Reduce sticky column widths */
-    .db-table thead th:nth-child(1) { width: 78px !important; min-width: 78px !important; max-width: 78px !important; }
-    .db-table thead th:nth-child(2) { width: 90px !important; min-width: 90px !important; max-width: 90px !important; }
-    /* Smooth horizontal scroll */
-    .db-table-wrap { -webkit-overflow-scrolling: touch; max-height: 70vh !important; }
-    /* Edit view on mobile */
-    #edit-view .card { padding: 0.85rem !important; border-radius: 6px !important; }
-    #edit-view .card-head { flex-direction: column; align-items: stretch; gap: 0.6rem; }
-    #edit-view .card-head h2 { font-size: 0.92rem !important; }
-    #edit-view .tabs.tabs-with-save {
-        flex-direction: column; align-items: stretch !important; gap: 0.5rem;
-        margin: 0 -0.85rem 1rem -0.85rem !important; padding: 0 0.85rem !important;
-    }
-    #edit-view .tabs-buttons { width: 100%; }
-    #edit-view .tab { flex: 1; padding: 0.6rem 0.5rem !important; font-size: 0.82rem !important; text-align: center; }
-    #edit-view .tabs-save-group { width: 100%; justify-content: space-between; }
-    #edit-view .tabs-save-group button { flex: 1; }
-    #edit-view .spec-edit { grid-template-columns: 1fr !important; gap: 0.25rem !important; padding: 0.35rem 0 !important; }
-    #edit-view .spec-edit label { font-size: 0.72rem; }
-    #edit-view .btn-row { flex-direction: column; }
-    #edit-view .btn-row button { width: 100%; }
+/* ===== Responsive : mobile-view (auto via JS OU force via bouton) ===== */
+body.mobile-view header { padding: 0 1rem !important; height: 60px !important; }
+body.mobile-view .header-logo { height: 44px !important; }
+body.mobile-view .header-back { padding: 4px 10px !important; font-size: 0.72rem !important; }
+body.mobile-view main { padding: 0.75rem 0.5rem !important; }
+body.mobile-view .selector-section { padding: 0.5rem 0.75rem !important; border-radius: 6px !important; }
+body.mobile-view .intro-row { gap: 0.5rem !important; margin-bottom: 0.75rem !important; }
+body.mobile-view .section-title { font-size: 0.95rem !important; }
+body.mobile-view .preview-sub { display: none; }
+body.mobile-view .db-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
 }
+body.mobile-view .db-controls .db-control-group { min-width: 0 !important; }
+body.mobile-view .db-controls .db-control-group:has(#db-search),
+body.mobile-view .db-controls .db-control-group:has(#db-export) { grid-column: 1 / -1; }
+body.mobile-view .db-control-group select,
+body.mobile-view .db-control-group input { min-width: 0 !important; width: 100% !important; }
+body.mobile-view .db-search { min-width: 0 !important; }
+body.mobile-view .db-table { font-size: 0.74rem !important; }
+body.mobile-view .db-table thead th { font-size: 0.6rem !important; padding: 5px 5px !important; height: 38px !important; }
+body.mobile-view .db-table tbody td { padding: 5px 6px !important; font-size: 0.72rem !important; }
+/* Hide Fabricant column on mobile, show it inline under Modele */
+body.mobile-view .db-table thead th:nth-child(1),
+body.mobile-view .db-table tbody td:nth-child(1) { display: none; }
+body.mobile-view .db-table thead th:nth-child(2),
+body.mobile-view .db-table tbody td:nth-child(2) {
+    left: 0 !important; position: sticky;
+    width: 110px !important; min-width: 110px !important; max-width: 110px !important;
+    white-space: normal !important;
+}
+body.mobile-view .db-fab-mobile {
+    display: block; font-size: 0.6rem; color: #9ca8b5;
+    font-weight: 500; margin-top: 2px; line-height: 1.1;
+}
+.db-fab-mobile { display: none; }
+body.mobile-view .db-table-wrap { -webkit-overflow-scrolling: touch; max-height: 70vh !important; }
+body.mobile-view #edit-view .card { padding: 0.85rem !important; border-radius: 6px !important; }
+body.mobile-view #edit-view .card-head { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+body.mobile-view #edit-view .card-head h2 { font-size: 0.92rem !important; }
+body.mobile-view #edit-view .tabs.tabs-with-save {
+    flex-direction: column; align-items: stretch !important; gap: 0.5rem;
+    margin: 0 -0.85rem 1rem -0.85rem !important; padding: 0 0.85rem !important;
+}
+body.mobile-view #edit-view .tabs-buttons { width: 100%; }
+body.mobile-view #edit-view .tab { flex: 1; padding: 0.6rem 0.5rem !important; font-size: 0.82rem !important; text-align: center; }
+body.mobile-view #edit-view .tabs-save-group { width: 100%; justify-content: space-between; }
+body.mobile-view #edit-view .tabs-save-group button { flex: 1; }
+body.mobile-view #edit-view .spec-edit { grid-template-columns: 1fr !important; gap: 0.25rem !important; padding: 0.35rem 0 !important; }
+body.mobile-view #edit-view .spec-edit label { font-size: 0.72rem; }
+body.mobile-view #edit-view .btn-row { flex-direction: column; }
+body.mobile-view #edit-view .btn-row button { width: 100%; }
 
-@media (max-width:480px) {
-    .db-controls { grid-template-columns: 1fr !important; }
-    .db-controls .db-control-group:has(#db-search),
-    .db-controls .db-control-group:has(#db-export) { grid-column: 1; }
-    .header-back span { display: none; }
-    .preview-badge { font-size: 0.55rem; padding: 2px 6px; }
+body.narrow-view .db-controls { grid-template-columns: 1fr !important; }
+body.narrow-view .db-controls .db-control-group:has(#db-search),
+body.narrow-view .db-controls .db-control-group:has(#db-export) { grid-column: 1; }
+body.narrow-view .header-back span { display: none; }
+body.narrow-view .preview-badge { font-size: 0.55rem; padding: 2px 6px; }
+
+/* Toggle button for forced mobile preview */
+.view-toggle {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    padding: 5px 10px; border-radius: 6px;
+    cursor: pointer; font-size: 0.74rem; font-weight: 600;
+    font-family: inherit;
+    display: inline-flex; align-items: center; gap: 4px;
 }
+.view-toggle:hover { background: rgba(255,255,255,0.12); }
+.view-toggle.active { background: #FFB74D; color: #000; border-color: #FFB74D; }
+
+/* Mobile preview frame â€” affichage simule d'un cellulaire */
+body.force-mobile { background: #000; }
+body.force-mobile main, body.force-mobile header, body.force-mobile .accent-bar {
+    max-width: 414px; margin-left: auto; margin-right: auto;
+    box-shadow: 0 0 0 1px #444, 0 0 20px rgba(0,0,0,0.7);
+}
+body.force-mobile header { border-radius: 14px 14px 0 0; }
+body.force-mobile main { min-height: calc(100vh - 80px); border-radius: 0 0 14px 14px; }
 .db-modele-link { cursor: pointer; }
 /* ===== EDIT VIEW (style: edit-machine.html des excavatrices) ===== */
 #edit-view { display: none; }
@@ -289,6 +312,7 @@
       <span class="section-title">Base de donnees Grues Mobiles</span>
       <span class="preview-badge" style="background:#00CC66;color:#001a0a">Beta</span>
       <span class="preview-sub">Amerique du Nord &middot; 2015 - 2026</span>
+      <button id="view-mobile-toggle" class="view-toggle" title="Forcer l'affichage cellulaire" style="margin-left:auto;">&#128241; Apercu mobile</button>
     </div>
 
     <div class="db-controls">
@@ -564,6 +588,11 @@ function render() {
             b.className = 'edited-badge'; b.textContent = 'Edite';
             td.appendChild(b);
           }
+          // Fabricant inline for mobile (hidden by CSS on desktop)
+          const fabSub = document.createElement('div');
+          fabSub.className = 'db-fab-mobile';
+          fabSub.textContent = r['Fabricant'] || '';
+          td.appendChild(fabSub);
         }
         else if (c.key==='Type de grue') { td.innerHTML = typeChip(v); td.title = v; }
         else td.textContent = v;
@@ -800,6 +829,28 @@ buildHeader();
   document.getElementById(id).addEventListener('change', render);
 });
 render();
+
+// ---- View-mode toggle: auto responsive + force-mobile button ----
+const VIEW_KEY = 'grues_view_mobile_forced';
+function syncViewMode() {
+  const body = document.body;
+  const forced = body.classList.contains('force-mobile');
+  const w = window.innerWidth;
+  body.classList.toggle('mobile-view', forced || w <= 768);
+  body.classList.toggle('narrow-view', forced || w <= 480);
+}
+const viewBtn = document.getElementById('view-mobile-toggle');
+function applyForcedView(on) {
+  const body = document.body;
+  body.classList.toggle('force-mobile', on);
+  viewBtn.classList.toggle('active', on);
+  viewBtn.innerHTML = on ? '&#128187; Vue desktop' : '&#128241; Apercu mobile';
+  localStorage.setItem(VIEW_KEY, on ? '1' : '0');
+  syncViewMode();
+}
+viewBtn.addEventListener('click', ()=> applyForcedView(!document.body.classList.contains('force-mobile')));
+window.addEventListener('resize', syncViewMode);
+applyForcedView(localStorage.getItem(VIEW_KEY) === '1');
 </script>
 </body>
 </html>
