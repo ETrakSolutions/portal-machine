@@ -36,29 +36,59 @@
 .db-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .db-table thead th {
     background: #1a2a3a; color: #fff;
-    padding: 6px 8px; text-align: left;
-    font-weight: 700; font-size: 0.66rem;
-    text-transform: uppercase; letter-spacing: 0.3px;
+    padding: 10px 12px; text-align: left;
+    font-weight: 700; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.5px;
     position: sticky; top: 0; z-index: 10;
     cursor: pointer; user-select: none;
-    white-space: normal;
-    line-height: 1.2; vertical-align: bottom;
-    height: 42px;
+    white-space: nowrap;
 }
-.db-table thead th .sub { font-weight: 500; opacity: 0.65; font-size: 0.92em; }
 .db-table thead th:hover { background: #243a4f; }
 .db-table thead th .sort-arrow { margin-left: 4px; opacity: 0.3; }
 .db-table thead th.sorted .sort-arrow { opacity: 1; color: #00CC66; }
 .db-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
 .db-table tbody tr:hover { background: rgba(0,100,200,0.1); }
-.db-table tbody td { padding: 6px 8px; color: #ccc; white-space: nowrap; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; }
-.db-table tbody td:last-child { white-space: normal; line-height: 1.25; }
+.db-table tbody td { padding: 8px 12px; color: #ccc; white-space: nowrap; font-size: 0.8rem; }
+.db-fixed-col {
+    padding: 4px 6px !important;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.db-modele-year {
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 0.2rem;
+}
+.db-note-dot {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    cursor: help;
+    transition: all 0.2s;
+}
+.db-note-dot.has-note {
+    background: #00CC66;
+    border-color: #00CC66;
+    box-shadow: 0 0 6px rgba(0,204,102,0.6);
+}
+.flag-btn {
+    background: transparent; border: none; cursor: pointer;
+    font-size: 1rem; padding: 2px 4px; border-radius: 3px;
+    opacity: 0.2; transition: transform 0.15s;
+}
+.flag-btn:hover { opacity: 0.7; transform: scale(1.2); }
 .db-table tbody td:first-child { font-weight: 600; color: #fff; }
 .db-table thead th:nth-child(1), .db-table tbody td:nth-child(1) {
     position: sticky; left: 0; z-index: 5; background: #1a2a3a;
 }
 .db-table thead th:nth-child(2), .db-table tbody td:nth-child(2) {
-    position: sticky; left: 95px; z-index: 5; background: #1a2a3a;
+    position: sticky; left: 110px; z-index: 5; background: #1a2a3a;
 }
 .db-table thead th:nth-child(1), .db-table thead th:nth-child(2) { z-index: 15; }
 .db-table tbody tr:hover td:nth-child(1), .db-table tbody tr:hover td:nth-child(2) {
@@ -448,13 +478,14 @@ function expandByYear(models) {
 let DATA = expandByYear(applyEdits());
 
 const COLS = [
-  {key:'Fabricant', label:'Fabricant', w:'95px'},
-  {key:'Modele', label:'Modele', w:'110px'},
-  {key:'Annee', label:'Annee', w:'55px'},
-  {key:'__capacite__', label:'Capacite<br><span class="sub">US t / mt</span>', sortBy:'Capacite max (US t)', w:'95px'},
-  {key:'__boom__', label:'Boom<br><span class="sub">pi / m</span>', sortBy:'Longueur max boom (pi)', w:'80px'},
-  {key:'Sections boom', label:'Sections<br><span class="sub">boom</span>', w:'70px'},
-  {key:'Mode extension', label:'Mode<br><span class="sub">extension</span>', w:'170px'}
+  {key:'Fabricant', label:'Fabricant', w:'110px'},
+  {key:'Modele', label:'Modele', w:'130px'},
+  {key:'__notes__', label:'Notes', w:'50px', center:true},
+  {key:'__flag__', label:'ðŸš©', w:'30px', center:true},
+  {key:'__capacite__', label:'Capacite (US t / mt)', sortBy:'Capacite max (US t)', w:'140px'},
+  {key:'__boom__', label:'Boom max (pi / m)', sortBy:'Longueur max boom (pi)', w:'130px'},
+  {key:'Sections boom', label:'Sections', w:'70px'},
+  {key:'Mode extension', label:'Mode extension', w:'200px'}
 ];
 let sortKey = 'Fabricant', sortAsc = true;
 
@@ -513,6 +544,7 @@ function buildHeader() {
   COLS.forEach(c=>{
     const th = document.createElement('th');
     if (c.w) { th.style.width = c.w; th.style.minWidth = c.w; th.style.maxWidth = c.w; }
+    if (c.center) th.style.textAlign = 'center';
     th.innerHTML = c.label + ' <span class="sort-arrow">&#9650;</span>';
     th.onclick = ()=>{
       const sk = c.sortBy || c.key;
@@ -578,11 +610,18 @@ function render() {
           else td.innerHTML = '<span style="color:#fff;font-weight:600">'+pi+'</span> <span style="color:#888">/</span> <span style="color:#bbb">'+m+'</span>';
         }
         else if (c.key==='Modele') {
-          const link = document.createElement('span');
+          td.className = 'db-fixed-col';
+          const link = document.createElement('a');
           link.className = 'db-modele-link';
+          link.href = 'javascript:void(0)';
           link.textContent = v;
-          link.onclick = ()=>openEditView(r);
+          link.title = 'Editer ' + (r['Fabricant']||'') + ' ' + v + ' (' + (r['Annee']||'') + ')';
+          link.onclick = (e) => { e.preventDefault(); openEditView(r); };
           td.appendChild(link);
+          const yearSpan = document.createElement('span');
+          yearSpan.className = 'db-modele-year';
+          yearSpan.textContent = ' ' + (r['Annee']||'');
+          td.appendChild(yearSpan);
           if (r._edited) {
             const b = document.createElement('span');
             b.className = 'edited-badge'; b.textContent = 'Edite';
@@ -593,6 +632,26 @@ function render() {
           fabSub.className = 'db-fab-mobile';
           fabSub.textContent = r['Fabricant'] || '';
           td.appendChild(fabSub);
+        }
+        else if (c.key==='Fabricant') {
+          td.className = 'db-fixed-col';
+          td.textContent = v;
+        }
+        else if (c.key==='__notes__') {
+          const dot = document.createElement('span');
+          dot.className = 'db-note-dot' + ((r['Notes']||'').trim() ? ' has-note' : '');
+          dot.title = (r['Notes']||'').trim() || 'Aucune note';
+          td.style.textAlign = 'center';
+          td.appendChild(dot);
+        }
+        else if (c.key==='__flag__') {
+          td.style.textAlign = 'center';
+          td.style.fontSize = '0.9rem';
+          const btn = document.createElement('button');
+          btn.className = 'flag-btn';
+          btn.textContent = 'ðŸš©';
+          btn.title = 'Drapeau (a venir)';
+          td.appendChild(btn);
         }
         else if (c.key==='Type de grue') { td.innerHTML = typeChip(v); td.title = v; }
         else td.textContent = v;
