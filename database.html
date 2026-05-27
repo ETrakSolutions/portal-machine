@@ -210,9 +210,18 @@
             min-width: 30px;
             max-width: 34px;
             text-align: center;
-            cursor: default;
+            cursor: pointer;
+            user-select: none;
         }
-        .db-table thead th.bom-col:hover { background: #1a2a3a; }
+        .db-table thead th.bom-col:hover { background: #243a4f; }
+        .db-table thead th.bom-col .sort-arrow {
+            writing-mode: horizontal-tb;
+            display: block;
+            margin: 2px auto 0;
+            font-size: 0.6rem;
+            opacity: 0.3;
+        }
+        .db-table thead th.bom-col.sorted .sort-arrow { opacity: 1; color: #00CC66; }
         .db-legend {
             display: flex;
             gap: 1rem;
@@ -373,6 +382,75 @@
             font-size: 0.7rem; color: #FF8C00; cursor: pointer; user-select: none;
         }
         .pc-allyears-label input { accent-color: #FF8C00; cursor: pointer; }
+
+        /* ===== Responsive : mobile-view (auto via JS OU force via bouton) ===== */
+        body.mobile-view header { padding: 0 1rem !important; height: 60px !important; }
+        body.mobile-view .header-logo { height: 44px !important; }
+        body.mobile-view .header-back { padding: 4px 10px !important; font-size: 0.72rem !important; }
+        body.mobile-view main { padding: 0.75rem 0.5rem !important; }
+        body.mobile-view .selector-section { padding: 0.5rem 0.75rem !important; border-radius: 6px !important; }
+        body.mobile-view .intro-row { gap: 0.5rem !important; margin-bottom: 0.75rem !important; flex-wrap: wrap; }
+        body.mobile-view .section-title { font-size: 0.95rem !important; }
+        body.mobile-view .db-controls {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.5rem !important;
+        }
+        body.mobile-view .db-controls .db-control-group { min-width: 0 !important; }
+        body.mobile-view .db-controls .db-control-group:has(#db-search),
+        body.mobile-view .db-controls .db-control-group:has(#db-export),
+        body.mobile-view .db-controls .db-control-group#db-import-link-wrap { grid-column: 1 / -1; }
+        body.mobile-view .db-control-group select,
+        body.mobile-view .db-control-group input { min-width: 0 !important; width: 100% !important; }
+        body.mobile-view .db-search { min-width: 0 !important; }
+        body.mobile-view .db-table { font-size: 0.74rem !important; }
+        body.mobile-view .db-table thead th { font-size: 0.6rem !important; padding: 5px 5px !important; }
+        body.mobile-view .db-table tbody td { padding: 5px 6px !important; font-size: 0.72rem !important; }
+        /* Hide Fabricant column on mobile, keep only Modele sticky */
+        body.mobile-view .db-table thead th[data-col="fab"],
+        body.mobile-view .db-table tbody td[data-col-cell="fab"] { display: none !important; }
+        body.mobile-view .db-table thead th[data-col="modele"],
+        body.mobile-view .db-table tbody td[data-col-cell="modele"],
+        body.mobile-view .db-table thead th:nth-child(2),
+        body.mobile-view .db-table tbody td:nth-child(2) {
+            left: 0 !important; position: sticky;
+            width: 110px !important; min-width: 110px !important; max-width: 110px !important;
+            white-space: normal !important;
+        }
+        body.mobile-view .db-fab-mobile {
+            display: block; font-size: 0.6rem; color: #9ca8b5;
+            font-weight: 500; margin-top: 2px; line-height: 1.1;
+        }
+        .db-fab-mobile { display: none; }
+        body.mobile-view .db-table-wrap { -webkit-overflow-scrolling: touch; max-height: 70vh !important; }
+        body.mobile-view .db-legend { font-size: 0.7rem; gap: 0.5rem; flex-wrap: wrap; }
+        body.mobile-view .db-pagination { flex-wrap: wrap; gap: 0.3rem; }
+        body.mobile-view .db-pagination button { padding: 5px 10px; font-size: 0.72rem; }
+
+        body.narrow-view .db-controls { grid-template-columns: 1fr !important; }
+        body.narrow-view .header-back span { display: none; }
+
+        /* Toggle button for forced mobile preview */
+        .view-toggle {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            padding: 5px 10px; border-radius: 6px;
+            cursor: pointer; font-size: 0.74rem; font-weight: 600;
+            font-family: inherit;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .view-toggle:hover { background: rgba(255,255,255,0.12); }
+        .view-toggle.active { background: #FFB74D; color: #000; border-color: #FFB74D; }
+
+        /* Forced mobile preview frame */
+        body.force-mobile { background: #000; }
+        body.force-mobile main, body.force-mobile header, body.force-mobile .accent-bar {
+            max-width: 414px; margin-left: auto; margin-right: auto;
+            box-shadow: 0 0 0 1px #444, 0 0 20px rgba(0,0,0,0.7);
+        }
+        body.force-mobile header { border-radius: 14px 14px 0 0; }
+        body.force-mobile main { min-height: calc(100vh - 80px); border-radius: 0 0 14px 14px; }
     </style>
 </head>
 <body>
@@ -389,6 +467,7 @@
         <section class="selector-section">
             <div class="intro-row">
                 <span class="section-title" data-i18n="db.title">Base de donnees Machine</span>
+                <button id="view-mobile-toggle" class="view-toggle" title="Forcer l'affichage cellulaire" style="margin-left:auto;">&#128241; Apercu mobile</button>
             </div>
 
             <div class="db-controls">
@@ -415,6 +494,10 @@
                 <div class="db-control-group">
                     <label>&nbsp;</label>
                     <button id="db-export" class="db-export-btn" data-i18n-html="db.export">&#128196; Exporter CSV</button>
+                </div>
+                <div class="db-control-group" id="db-import-link-wrap" style="display:none;">
+                    <label>&nbsp;</label>
+                    <a href="import-csv.html" class="db-export-btn" style="background:#FFB74D;color:#000;text-decoration:none;display:inline-block;line-height:1.4;">&#128229; Import CSV</a>
                 </div>
             </div>
 
@@ -723,12 +806,17 @@
             }
         }
 
-        var EXC_BOM_CODES = ['0000','0001','0002','0004','0005','0008','0009','0070'];
+        // Colonnes affichees dans la BD: Cabine, Sans cabine, Mini, Drain, Boite GC, Autre
+        // Les autres codes (0001 Hauteur, 0002 Rotation, 0005 Multi Axes, 0008 Swing boom, 0304 Cremaillere, _custom)
+        // sont regroupes dans la colonne virtuelle _AUTRE qui s'allume si une de ces options est obligatoire ou optionnelle
+        var EXC_BOM_CODES = ['0000','0003','0004','0009','0070','_AUTRE'];
+        var EXC_AUTRE_HIDDEN_CODES = ['0001','0002','0005','0008','0304'];
         var POMPE_BOM_CODES = ['0200','0203','0201','0202','0204','0205','0206','0207','0208','0209'];
         var BOM_CODES = EXC_BOM_CODES; // default, updated on type change
         var BOM_NAMES = {
-            '0000': 'Cabine', '0001': 'Hauteur', '0002': 'Rotation', '0004': 'Mini exc',
-            '0005': 'Multi Axes', '0008': 'Swing boom', '0009': 'Drain hyd', '0070': 'Boite GC',
+            '0000': 'Cabine', '0001': 'Hauteur', '0002': 'Rotation', '0003': 'Sans cabine',
+            '0004': 'Mini exc', '0005': 'Multi Axes', '0008': 'Swing boom', '0009': 'Drain hyd',
+            '0070': 'Boite GC', '0304': 'Rotation cremaillere', '_AUTRE': 'Autre',
             '0200': 'Avec coffre', '0203': 'Sans coffre', '0201': 'Hauteur', '0202': 'Rotation',
             '0204': '4 sections', '0205': '5 sections', '0206': '6 sections',
             '0207': 'Rot. cylindre', '0208': 'Inclinometre', '0209': 'Reel 15M',
@@ -736,6 +824,31 @@
             'H0034': 'Harnais Volvo', 'H0041': 'Harnais Link-Belt/Case', 'H0080': 'Harnais Cat',
             'H0100': 'Harnais Cat (ECU)', 'H0121': 'Harnais Hitachi-7', 'H0043': 'Harnais Generique'
         };
+
+        // Calcule l'etat de la colonne "Autre": rouge si au moins une option cachee
+        // ou personnalisee (_custom) est marquee OBLIGATOIRE dans la page d'edition. Sinon na.
+        function computeAutreState(d) {
+            var hasRouge = false;
+            var details = [];
+            var bom = d.bom || {};
+            var removed = Array.isArray(d._removed) ? d._removed : [];
+            EXC_AUTRE_HIDDEN_CODES.forEach(function(c) {
+                if (removed.indexOf(c) >= 0) return;
+                if ((bom[c] || 'na') === 'r') {
+                    hasRouge = true;
+                    details.push((BOM_NAMES[c] || c) + ' : Obligatoire');
+                }
+            });
+            if (Array.isArray(d._custom)) {
+                d._custom.forEach(function(cr) {
+                    if (cr.status === 'r') {
+                        hasRouge = true;
+                        details.push((cr.desc || cr.pn || cr.code || 'Option') + ' : Obligatoire');
+                    }
+                });
+            }
+            return { state: hasRouge ? 'r' : 'na', details: details };
+        }
 
         // Spec columns per machine type: {key: label}
         var SPEC_COLS = {
@@ -762,9 +875,15 @@
         // Auth
         var DB_ROLES = { super_admin: true, administrateur: true, ingenierie: true };
         var EDIT_ROLES = { super_admin: true, administrateur: true };
+        var IMPORT_ROLES = { super_admin: true, administrateur: true };
         var user = null;
         try { user = JSON.parse(localStorage.getItem('portal_user')); } catch(e) {}
         var hasAccess = user && user.role && DB_ROLES[user.role];
+        // Afficher le bouton Import CSV seulement pour les admins
+        if (user && user.role && IMPORT_ROLES[user.role]) {
+            var importWrap = document.getElementById('db-import-link-wrap');
+            if (importWrap) importWrap.style.display = '';
+        }
         // Lecture seule : toute l'edition se fait via edit-machine.html
         // (cliquer sur le nom du modele pour ouvrir la page d'edition)
         var canEdit = false;
@@ -1095,6 +1214,8 @@
 
             // Cabine obligatoire pour toutes les machines
             bom['0000'] = 'r';
+            // Sans cabine — na par defaut, admin peut activer manuellement
+            bom['0003'] = 'na';
 
             // R4: Hauteur et Rotation toujours optionnel
             bom['0001'] = 'j';
@@ -1281,6 +1402,7 @@
             if (isEmpty) {
                 allData = [];
                 filtered = [];
+                BOM_CODES = [];
                 var headerRow = document.querySelector('#db-table thead tr');
                 while (headerRow.children.length > 2) headerRow.removeChild(headerRow.lastChild);
                 var fabHeader = document.querySelector('#db-table thead th[data-col="fab"]');
@@ -1333,11 +1455,18 @@
                 });
                 headerRow.appendChild(thType);
             }
-            // Add BOM columns
+            // Add BOM columns (avec fleche de tri comme les autres titres)
             BOM_CODES.forEach(function(code) {
                 var th = document.createElement('th');
                 th.className = 'bom-col';
-                th.textContent = BOM_NAMES[code] || code;
+                th.dataset.col = 'bom_' + code;
+                th.innerHTML = (BOM_NAMES[code] || code) + '<span class="sort-arrow">&#9650;</span>';
+                th.addEventListener('click', function() {
+                    var col = this.dataset.col;
+                    if (sortCol === col) { sortAsc = !sortAsc; }
+                    else { sortCol = col; sortAsc = true; }
+                    applyFilters();
+                });
                 headerRow.appendChild(th);
             });
             // Add harnais for excavatrice
@@ -1345,7 +1474,12 @@
                 var thH = document.createElement('th');
                 thH.className = 'bom-col';
                 thH.dataset.col = 'harnais';
-                thH.textContent = 'Harnais';
+                thH.innerHTML = 'Harnais<span class="sort-arrow">&#9650;</span>';
+                thH.addEventListener('click', function() {
+                    if (sortCol === 'harnais') { sortAsc = !sortAsc; }
+                    else { sortCol = 'harnais'; sortAsc = true; }
+                    applyFilters();
+                });
                 headerRow.appendChild(thH);
             }
             // Add Notes column — large en vue Tous (etire pour remplir l'espace), compact en vue type
@@ -1463,6 +1597,15 @@
             var annee = document.getElementById('db-annee').value;
             var search = document.getElementById('db-search').value.toLowerCase().trim();
 
+            // Pre-calculer d.bom pour TOUTES les machines (pas juste celles rendues),
+            // sinon les filtres BOM voient 'na' pour les machines des pages suivantes.
+            allData.forEach(function(d) {
+                if (!d.bom || Object.keys(d.bom).length === 0) {
+                    if (d._type === 'Excavatrice') d.bom = computeDefaultBom(d);
+                    else if (d._type === 'Pompe a Beton') d.bom = computeDefaultBomPompe(d);
+                }
+            });
+
             filtered = allData.filter(function(d) {
                 if (fab && d.fab !== fab) return false;
                 // Skip year filter when search is active — show all years for matching models
@@ -1472,13 +1615,28 @@
             });
 
             var classeOrder = {'Mini':0,'Compact':1,'120':2,'200':3,'270':4,'300':5,'400':6,'500':7,'700-800':8,'1000+':9};
+            var bomStateOrder = {'r':0,'j':1,'na':2};
             filtered.sort(function(a, b) {
-                var va = a[sortCol] || '';
-                var vb = b[sortCol] || '';
-                if (sortCol === 'annee') { va = parseInt(va) || 0; vb = parseInt(vb) || 0; }
-                else if (sortCol === 'classe') {
-                    va = classeOrder[va] !== undefined ? classeOrder[va] : 99;
-                    vb = classeOrder[vb] !== undefined ? classeOrder[vb] : 99;
+                var va, vb;
+                if (sortCol && sortCol.indexOf('bom_') === 0) {
+                    var code = sortCol.slice(4);
+                    if (code === '_AUTRE') {
+                        va = computeAutreState(a).state;
+                        vb = computeAutreState(b).state;
+                    } else {
+                        va = (a.bom && a.bom[code]) || 'na';
+                        vb = (b.bom && b.bom[code]) || 'na';
+                    }
+                    va = bomStateOrder[va] !== undefined ? bomStateOrder[va] : 3;
+                    vb = bomStateOrder[vb] !== undefined ? bomStateOrder[vb] : 3;
+                } else {
+                    va = a[sortCol] || '';
+                    vb = b[sortCol] || '';
+                    if (sortCol === 'annee') { va = parseInt(va) || 0; vb = parseInt(vb) || 0; }
+                    else if (sortCol === 'classe') {
+                        va = classeOrder[va] !== undefined ? classeOrder[va] : 99;
+                        vb = classeOrder[vb] !== undefined ? classeOrder[vb] : 99;
+                    }
                 }
                 if (va < vb) return sortAsc ? -1 : 1;
                 if (va > vb) return sortAsc ? 1 : -1;
@@ -1561,6 +1719,15 @@
                     var td = document.createElement('td');
                     td.style.textAlign = 'center';
                     td.style.padding = '4px';
+                    if (code === '_AUTRE') {
+                        var info = computeAutreState(d);
+                        var cls = 'bom-token readonly' + (info.state === 'r' ? ' bom-r' : info.state === 'j' ? ' bom-j' : ' bom-na');
+                        var label = info.state === 'na' ? '-' : '';
+                        var title = info.details.length ? info.details.join('\n') : 'Aucune autre option';
+                        td.innerHTML = '<span class="' + cls + '" data-code="_AUTRE" data-idx="' + dataIdx + '" title="' + title.replace(/"/g, '&quot;') + '">' + label + '</span>';
+                        tr.appendChild(td);
+                        return;
+                    }
                     var isRemoved = Array.isArray(d._removed) && d._removed.indexOf(code) >= 0;
                     if (isRemoved){
                         td.innerHTML = '<span class="bom-token bom-na readonly" data-code="' + code + '" data-idx="' + dataIdx + '" title="Retire pour cette machine" style="opacity:0.4">&times;</span>';
@@ -1710,6 +1877,13 @@
                         tokens.forEach(function(token) {
                             var c = token.dataset.code;
                             if (!c) return;
+                            if (c === '_AUTRE') {
+                                var info = computeAutreState(d);
+                                token.className = 'bom-token readonly' + (info.state === 'r' ? ' bom-r' : info.state === 'j' ? ' bom-j' : ' bom-na');
+                                token.textContent = info.state === 'na' ? '-' : '';
+                                token.title = info.details.length ? info.details.join('\n') : 'Aucune autre option';
+                                return;
+                            }
                             if (removed.indexOf(c) >= 0){
                                 token.className = 'bom-token bom-na readonly';
                                 token.textContent = '×';
@@ -1964,20 +2138,193 @@
         var _origRenderPage = renderPage;
         renderPage = function() { _origRenderPage(); setTimeout(syncScrollWidth, 50); };
 
-        // Export CSV
-        document.getElementById('db-export').addEventListener('click', function() {
-            var csv = 'Fabricant,Modele,Annee,Puissance,Traction,Type boom,Swing,Voltage,Poids,Classe,Cabine,Hauteur,Rotation,Mini,Multi,Swing BOM,Drain,GC,Harnais\n';
-            filtered.forEach(function(d) {
-                var row = [d.fab, d.modele, d.annee, d.puissance, d.traction, d.boom, d.swing, d.voltage, d.poids, d.classe];
-                BOM_CODES.forEach(function(c) { row.push((d.bom && d.bom[c]) || '-'); });
-                row.push(d.harnais || '-');
-                csv += row.map(function(v) { return '"' + (v || '').replace(/"/g, '""') + '"'; }).join(',') + '\n';
+        // Export CSV \u2014 version enrichie avec tous les codes BOM + Autre + Custom + Notes + Drapeau.
+        // Precharge les overrides manquants en parallele avec progress avant generation.
+        function stateLabel(s) {
+            return s === 'r' ? 'Obligatoire' : s === 'j' ? 'Optionnel' : s === 'na' ? 'N/A' : (s || 'N/A');
+        }
+
+        function ensureAllOverridesLoaded(rows, onProgress) {
+            // Charge tous les overrides manquants en lots de 10 paralleles
+            var todo = rows.filter(function(d) {
+                return overridesCache[bomKey(d.fab, d.modele, d.annee)] === undefined;
             });
-            var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'excavatrice_bd_' + new Date().toISOString().slice(0, 10) + '.csv';
-            link.click();
+            if (!todo.length) return Promise.resolve();
+            var BATCH = 10;
+            var idx = 0, done = 0, total = todo.length;
+            return new Promise(function(resolve) {
+                function nextBatch() {
+                    if (idx >= todo.length) { resolve(); return; }
+                    var batch = todo.slice(idx, idx + BATCH);
+                    idx += BATCH;
+                    Promise.all(batch.map(function(d) {
+                        return new Promise(function(res) {
+                            loadOverride(d.fab, d.modele, d.annee, function() { res(); });
+                        });
+                    })).then(function() {
+                        done += batch.length;
+                        if (onProgress) onProgress(done, total);
+                        nextBatch();
+                    });
+                }
+                nextBatch();
+            });
+        }
+
+        function ensureAllNotesLoaded(rows, onProgress) {
+            var todo = rows.filter(function(d) {
+                var k = 'notes_' + d.fab + '_' + d.modele + '_' + d.annee;
+                return notesCache[k] === undefined;
+            });
+            if (!todo.length) return Promise.resolve();
+            var BATCH = 10;
+            var idx = 0, done = 0, total = todo.length;
+            return new Promise(function(resolve) {
+                function nextBatch() {
+                    if (idx >= todo.length) { resolve(); return; }
+                    var batch = todo.slice(idx, idx + BATCH);
+                    idx += BATCH;
+                    Promise.all(batch.map(function(d) {
+                        var k = 'notes_' + d.fab + '_' + d.modele + '_' + d.annee;
+                        return fetch(API_URL + '?action=get&key=' + encodeURIComponent(k))
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) { notesCache[k] = (data && data.value) || ''; })
+                            .catch(function() { notesCache[k] = ''; });
+                    })).then(function() {
+                        done += batch.length;
+                        if (onProgress) onProgress(done, total);
+                        nextBatch();
+                    });
+                }
+                nextBatch();
+            });
+        }
+        var notesCache = {};
+
+        function showExportProgress(msg) {
+            var box = document.getElementById('db-export-progress');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'db-export-progress';
+                box.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a2332;border:2px solid #0062CC;border-radius:8px;padding:1.5rem 2rem;color:#fff;font-size:0.9rem;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.6);min-width:300px;text-align:center;';
+                document.body.appendChild(box);
+            }
+            box.textContent = msg;
+            box.style.display = '';
+        }
+        function hideExportProgress() {
+            var box = document.getElementById('db-export-progress');
+            if (box) box.style.display = 'none';
+        }
+
+        document.getElementById('db-export').addEventListener('click', function() {
+            var typeVal = document.getElementById('db-type').value;
+            var isExc = (typeVal === 'Excavatrice');
+
+            // S'assurer que d.bom est calcule pour toutes les lignes filtrees
+            filtered.forEach(function(d) {
+                if (!d.bom || Object.keys(d.bom).length === 0) {
+                    if (d._type === 'Excavatrice') d.bom = computeDefaultBom(d);
+                    else if (d._type === 'Pompe a Beton') d.bom = computeDefaultBomPompe(d);
+                }
+            });
+
+            showExportProgress('Chargement des overrides... 0 / ' + filtered.length);
+            ensureAllOverridesLoaded(filtered, function(done, total) {
+                showExportProgress('Chargement des overrides... ' + done + ' / ' + total);
+            }).then(function() {
+                // Appliquer overrides sur d.bom
+                filtered.forEach(function(d) {
+                    var ov = overridesCache[bomKey(d.fab, d.modele, d.annee)];
+                    if (!ov) return;
+                    d._removed = Array.isArray(ov._removed) ? ov._removed : [];
+                    d._custom = Array.isArray(ov._custom) ? ov._custom : [];
+                    for (var c in ov) {
+                        if (c === '_removed' || c === '_custom' || c === '_specs' || c === 'harnais') continue;
+                        d.bom[c] = ov[c];
+                    }
+                    if (d.bom['0009'] === 'j') d.bom['0009'] = 'r';
+                    if (ov.harnais) d.harnais = ov.harnais;
+                });
+                showExportProgress('Chargement des notes...');
+                return ensureAllNotesLoaded(filtered, function(done, total) {
+                    showExportProgress('Chargement des notes... ' + done + ' / ' + total);
+                });
+            }).then(function() {
+                // Construire le CSV enrichi
+                var headers;
+                if (isExc) {
+                    headers = [
+                        'Fabricant','Modele','Annee','Classe','Poids','Puissance','Traction','Type boom','Swing','Voltage',
+                        'Cabine','Sans cabine','Mini exc','Drain hyd','Boite GC',
+                        'Autre (Oui/Non)','Autre \u2014 details',
+                        'Hauteur','Rotation','Multi Axes','Swing boom','Rot. cremaillere',
+                        'Options custom (obligatoires)','Options custom (optionnelles)',
+                        'Harnais','Notes','Drapeau actif','Drapeau note'
+                    ];
+                } else {
+                    headers = ['Fabricant','Modele','Annee'];
+                    BOM_CODES.forEach(function(c) { headers.push(BOM_NAMES[c] || c); });
+                    headers.push('Notes','Drapeau actif','Drapeau note');
+                }
+
+                function esc(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+                var lines = [headers.map(esc).join(',')];
+
+                filtered.forEach(function(d) {
+                    var bom = d.bom || {};
+                    var noteKey = 'notes_' + d.fab + '_' + d.modele + '_' + d.annee;
+                    var note = notesCache[noteKey] || '';
+                    var fk = flagKey(d._type, d.fab, d.modele, d.annee);
+                    var flag = flagsCache[fk];
+                    var flagActif = (flag && flag.active) ? 'Oui' : 'Non';
+                    var flagNote = (flag && flag.active) ? (flag.note || '') : '';
+
+                    var row;
+                    if (isExc) {
+                        var autre = computeAutreState(d);
+                        var customR = [], customJ = [];
+                        if (Array.isArray(d._custom)) {
+                            d._custom.forEach(function(cr) {
+                                var label = (cr.pn || cr.code || '') + (cr.desc ? ' ' + cr.desc : '');
+                                if (cr.status === 'r') customR.push(label.trim());
+                                else if (cr.status === 'j') customJ.push(label.trim());
+                            });
+                        }
+                        row = [
+                            d.fab, d.modele, d.annee, d.classe || '', d.poids || '', d.puissance || '',
+                            d.traction || '', d.boom || '', d.swing || '', d.voltage || '',
+                            stateLabel(bom['0000']), stateLabel(bom['0003']), stateLabel(bom['0004']),
+                            stateLabel(bom['0009']), stateLabel(bom['0070']),
+                            autre.state === 'r' ? 'Oui' : 'Non',
+                            autre.details.join(' | '),
+                            stateLabel(bom['0001']), stateLabel(bom['0002']), stateLabel(bom['0005']),
+                            stateLabel(bom['0008']), stateLabel(bom['0304']),
+                            customR.join(' | '), customJ.join(' | '),
+                            d.harnais ? 'Z03B-' + d.harnais.replace(/^H/, '') : '',
+                            note, flagActif, flagNote
+                        ];
+                    } else {
+                        row = [d.fab, d.modele, d.annee];
+                        BOM_CODES.forEach(function(c) { row.push(stateLabel(bom[c])); });
+                        row.push(note, flagActif, flagNote);
+                    }
+                    lines.push(row.map(esc).join(','));
+                });
+
+                var csv = lines.join('\n');
+                var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                var typeSlug = (typeVal || 'bd').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+                link.download = typeSlug + '_bd_' + new Date().toISOString().slice(0, 10) + '.csv';
+                link.click();
+                hideExportProgress();
+                showToast('Export CSV genere (' + filtered.length + ' lignes)');
+            }).catch(function(err) {
+                hideExportProgress();
+                showToast('Erreur export: ' + (err && err.message || err));
+            });
         });
     })();
 
@@ -2161,6 +2508,74 @@
             toggleBtn.innerHTML = open ? '&#9660; Afficher' : '&#9650; Masquer';
             if (!open) renderChangelog();
         });
+    })();
+    </script>
+
+    <!-- View-mode toggle (responsive auto + force-mobile button) -->
+    <script>
+    (function(){
+        var VIEW_KEY = 'portal_view_mobile_forced';
+        function syncViewMode() {
+            var body = document.body;
+            var forced = body.classList.contains('force-mobile');
+            var w = window.innerWidth;
+            body.classList.toggle('mobile-view', forced || w <= 768);
+            body.classList.toggle('narrow-view', forced || w <= 480);
+        }
+        function applyForcedView(on) {
+            var body = document.body;
+            body.classList.toggle('force-mobile', on);
+            var btn = document.getElementById('view-mobile-toggle');
+            if (btn) {
+                btn.classList.toggle('active', on);
+                btn.innerHTML = on ? '&#128187; Vue desktop' : '&#128241; Apercu mobile';
+            }
+            try { localStorage.setItem(VIEW_KEY, on ? '1' : '0'); } catch(e){}
+            syncViewMode();
+        }
+        var btn = document.getElementById('view-mobile-toggle');
+        if (btn) {
+            btn.addEventListener('click', function(){
+                applyForcedView(!document.body.classList.contains('force-mobile'));
+            });
+        }
+        window.addEventListener('resize', syncViewMode);
+        // Inject Fabricant sublabel into Modele cells (for mobile)
+        function injectFabSublabels() {
+            var rows = document.querySelectorAll('#db-tbody tr');
+            rows.forEach(function(tr){
+                var tds = tr.children;
+                if (tds.length < 2) return;
+                var fabCell = tds[0], modCell = tds[1];
+                if (!fabCell || !modCell) return;
+                // Tag cells with data attrs for CSS targeting
+                fabCell.setAttribute('data-col-cell','fab');
+                modCell.setAttribute('data-col-cell','modele');
+                // Inject fab sublabel if not already present
+                if (!modCell.querySelector('.db-fab-mobile')) {
+                    var fabText = (fabCell.textContent || '').trim();
+                    if (fabText) {
+                        var sub = document.createElement('div');
+                        sub.className = 'db-fab-mobile';
+                        sub.textContent = fabText;
+                        modCell.appendChild(sub);
+                    }
+                }
+            });
+            // Also tag header cells for CSS
+            var ths = document.querySelectorAll('#db-table thead th');
+            if (ths[0]) ths[0].setAttribute('data-col','fab');
+            if (ths[1]) ths[1].setAttribute('data-col','modele');
+        }
+        // Run after table renders (observe tbody for changes)
+        var tbody = document.getElementById('db-tbody');
+        if (tbody) {
+            var mo = new MutationObserver(function(){ injectFabSublabels(); });
+            mo.observe(tbody, { childList: true });
+            injectFabSublabels();
+        }
+        try { applyForcedView(localStorage.getItem(VIEW_KEY) === '1'); }
+        catch(e) { syncViewMode(); }
     })();
     </script>
 </body>
