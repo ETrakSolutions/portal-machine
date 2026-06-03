@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>/* Portail deplace vers V2 — redirection */(function(){try{var rest=location.pathname.replace(/^.*\/portal-machine\//,"");location.replace("https://etraksolutions.github.io/portal-machine-V2/"+rest+location.search+location.hash);}catch(e){location.replace("https://etraksolutions.github.io/portal-machine-V2/");}})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>e-Trak | Base de donnees</title>
@@ -153,6 +154,9 @@
             font-style: italic;
         }
         .db-pagination {
+            display: none !important;
+        }
+        .db-pagination-old {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -336,11 +340,22 @@
         .flag-resolve-btn { background: #00CC66; color: #fff; }
         .flag-resolve-btn:hover { background: #00EE77; }
         .flag-cancel-btn { background: rgba(255,255,255,0.1); color: #ccc; }
-        .flag-section-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.78rem; }
+        .flag-section-row {
+            display: flex; gap: 8px; align-items: center;
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.78rem; flex-wrap: wrap;
+        }
         .flag-section-row:last-child { border-bottom: none; }
         .flag-badge { background: rgba(255,68,68,0.15); color: #FF8888; border-radius: 3px; padding: 2px 7px; font-size: 0.65rem; font-weight: 700; white-space: nowrap; }
-        .flag-note-text { color: #ccc; flex: 1; }
-        .flag-by { color: #888; font-size: 0.68rem; white-space: nowrap; }
+        .flag-note-text { color: #ccc; flex: 1 1 220px; min-width: 0; word-break: break-word; }
+        .flag-by { color: #888; font-size: 0.68rem; white-space: normal; flex-shrink: 0; }
+        .flag-resolve-btn { flex-shrink: 0; }
+        /* Sur ecran etroit la ligne se met en colonne */
+        @media (max-width: 720px) {
+          .flag-section-row { gap: 6px 8px; }
+          .flag-by { flex-basis: 100%; order: 4; }
+          .flag-resolve-btn { order: 5; }
+        }
         /* Product codes */
         .db-pc-cell { position: relative; min-width: 120px; }
         .db-pc-tags { display: flex; flex-wrap: wrap; gap: 2px; cursor: pointer; min-height: 22px; }
@@ -383,6 +398,52 @@
         }
         .pc-allyears-label input { accent-color: #FF8C00; cursor: pointer; }
 
+        /* ===== Petites tuiles intro-row (flags + changelog) ===== */
+        .db-tile-btn {
+            background: linear-gradient(145deg, #2A2A2A, #222222);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #F0F0F0;
+            padding: 6px 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.78rem; font-weight: 600;
+            position: relative;
+            transition: all 0.15s;
+            font-family: inherit;
+            line-height: 1.2;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .db-tile-btn:hover {
+            border-color: rgba(255,183,77,0.5);
+            color: #FFB74D;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .db-tile-btn.active {
+            background: linear-gradient(145deg, #FFB74D, #FFA02D);
+            border-color: #FFB74D;
+            color: #000;
+        }
+        .db-tile-btn .tile-ico { font-size: 0.95rem; line-height: 1; }
+        .db-tile-btn .tile-label { letter-spacing: 0.2px; }
+        .db-tile-btn .badge {
+            background: #FF4444; color: #fff;
+            border-radius: 10px;
+            padding: 0 6px;
+            font-size: 0.62rem; font-weight: 800;
+            line-height: 1.5;
+            min-width: 16px; height: 16px;
+            display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+        }
+        .db-tile-btn .badge.empty { display: none; }
+        .db-tile-btn.active .badge { background: #B12C2C; }
+        /* Hide the original tile headers — toggled via icon now */
+        #flags-section > .intro-row,
+        #changelog-section > .intro-row { display: none; }
+        #flags-section, #changelog-section { margin-top: 0.75rem !important; }
+
         /* ===== Responsive : mobile-view (auto via JS OU force via bouton) ===== */
         body.mobile-view header { padding: 0 1rem !important; height: 60px !important; }
         body.mobile-view .header-logo { height: 44px !important; }
@@ -398,8 +459,7 @@
         }
         body.mobile-view .db-controls .db-control-group { min-width: 0 !important; }
         body.mobile-view .db-controls .db-control-group:has(#db-search),
-        body.mobile-view .db-controls .db-control-group:has(#db-export),
-        body.mobile-view .db-controls .db-control-group#db-import-link-wrap { grid-column: 1 / -1; }
+        body.mobile-view .db-controls .db-control-group:has(#db-export) { grid-column: 1 / -1; }
         body.mobile-view .db-control-group select,
         body.mobile-view .db-control-group input { min-width: 0 !important; width: 100% !important; }
         body.mobile-view .db-search { min-width: 0 !important; }
@@ -444,13 +504,23 @@
         .view-toggle.active { background: #FFB74D; color: #000; border-color: #FFB74D; }
 
         /* Forced mobile preview frame */
-        body.force-mobile { background: #000; }
-        body.force-mobile main, body.force-mobile header, body.force-mobile .accent-bar {
-            max-width: 414px; margin-left: auto; margin-right: auto;
-            box-shadow: 0 0 0 1px #444, 0 0 20px rgba(0,0,0,0.7);
+        body.force-mobile { background: #0a0d12; }
+        body.force-mobile header, body.force-mobile .accent-bar, body.force-mobile main {
+            width: 100% !important;
+            max-width: 414px !important;
+            margin-left: auto !important; margin-right: auto !important;
+            box-sizing: border-box !important;
         }
-        body.force-mobile header { border-radius: 14px 14px 0 0; }
-        body.force-mobile main { min-height: calc(100vh - 80px); border-radius: 0 0 14px 14px; }
+        body.force-mobile header {
+            border-radius: 18px 18px 0 0;
+            box-shadow: 0 0 0 6px #1c1f24, 0 8px 28px rgba(0,0,0,0.55);
+        }
+        body.force-mobile main {
+            min-height: calc(100vh - 80px);
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 0 0 6px #1c1f24, 0 8px 28px rgba(0,0,0,0.55);
+        }
+        body.force-mobile .accent-bar { display: none; }
     </style>
 </head>
 <body>
@@ -467,7 +537,15 @@
         <section class="selector-section">
             <div class="intro-row">
                 <span class="section-title" data-i18n="db.title">Base de donnees Machine</span>
-                <button id="view-mobile-toggle" class="view-toggle" title="Forcer l'affichage cellulaire" style="margin-left:auto;">&#128241; Apercu mobile</button>
+                <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                    <button id="btn-toggle-flags" class="db-tile-btn" title="Drapeaux actifs" style="display:none;">
+                        <span class="tile-ico">&#128681;</span><span class="tile-label">Drapeaux</span><span id="flags-icon-badge" class="badge empty"></span>
+                    </button>
+                    <button id="btn-toggle-changelog" class="db-tile-btn" title="Journal des modifications" style="display:none;">
+                        <span class="tile-ico">&#128221;</span><span class="tile-label">Journal</span>
+                    </button>
+                    <button id="view-mobile-toggle" class="view-toggle" title="Forcer l'affichage cellulaire">&#128241; Apercu mobile</button>
+                </div>
             </div>
 
             <div class="db-controls">
@@ -494,10 +572,6 @@
                 <div class="db-control-group">
                     <label>&nbsp;</label>
                     <button id="db-export" class="db-export-btn" data-i18n-html="db.export">&#128196; Exporter CSV</button>
-                </div>
-                <div class="db-control-group" id="db-import-link-wrap" style="display:none;">
-                    <label>&nbsp;</label>
-                    <a href="import-csv.html" class="db-export-btn" style="background:#FFB74D;color:#000;text-decoration:none;display:inline-block;line-height:1.4;">&#128229; Import CSV</a>
                 </div>
             </div>
 
@@ -612,8 +686,11 @@
     <script>
     (function() {
         var API_URL = 'https://script.google.com/macros/s/AKfycbxDuq4Qt2mrsLGiOGLrxSFvouttOfjDYzky27tjcKL72QSc__cR4qvu1X2qyDFCuB8V/exec';
-        var PAGE_SIZE = 50;
+        // Pagination retiree — chargement infini par chunks (lazy render au scroll)
+        var CHUNK_SIZE = 100;
+        var PAGE_SIZE = 100000; // legacy (unused but kept for state-restore compat)
         var currentPage = 0;
+        var displayedRows = 0;  // combien de lignes sont actuellement rendues
         var allData = [];
         var filtered = [];
         var sortCol = 'fab';
@@ -879,11 +956,6 @@
         var user = null;
         try { user = JSON.parse(localStorage.getItem('portal_user')); } catch(e) {}
         var hasAccess = user && user.role && DB_ROLES[user.role];
-        // Afficher le bouton Import CSV seulement pour les admins
-        if (user && user.role && IMPORT_ROLES[user.role]) {
-            var importWrap = document.getElementById('db-import-link-wrap');
-            if (importWrap) importWrap.style.display = '';
-        }
         // Lecture seule : toute l'edition se fait via edit-machine.html
         // (cliquer sur le nom du modele pour ouvrir la page d'edition)
         var canEdit = false;
@@ -1071,9 +1143,14 @@
         window.renderFlagsSection = function renderFlagsSection() {
             var list = document.getElementById('flags-list');
             var badge = document.getElementById('flags-count-badge');
+            var iconBadge = document.getElementById('flags-icon-badge');
             if (!list) return;
             var active = Object.keys(flagsCache).filter(function(k) { return flagsCache[k] && flagsCache[k].active; });
             if (badge) badge.textContent = active.length ? active.length + ' actif' + (active.length > 1 ? 's' : '') : '';
+            if (iconBadge) {
+                iconBadge.textContent = active.length || '';
+                iconBadge.classList.toggle('empty', !active.length);
+            }
             if (!active.length) {
                 list.innerHTML = '<p style="color:#666;font-size:0.8rem;padding:0.5rem 0;">Aucun drapeau actif.</p>';
                 return;
@@ -1647,14 +1724,23 @@
             });
 
             currentPage = 0;
+            displayedRows = 0;
             renderPage();
         }
 
-        function renderPage() {
+        function renderPage(append) {
             var tbody = document.getElementById('db-tbody');
-            tbody.innerHTML = '';
-            var start = currentPage * PAGE_SIZE;
-            var end = Math.min(start + PAGE_SIZE, filtered.length);
+            var start, end;
+            if (append) {
+                start = displayedRows;
+                end = Math.min(start + CHUNK_SIZE, filtered.length);
+                if (start >= filtered.length) return; // nothing more to render
+            } else {
+                tbody.innerHTML = '';
+                displayedRows = 0;
+                start = 0;
+                end = Math.min(CHUNK_SIZE, filtered.length);
+            }
 
             // Hide fab column when a fabricant is selected in filter
             var fabFilter = document.getElementById('db-fab').value;
@@ -1933,18 +2019,21 @@
                 })(i);
             }
 
-            // Stats
+            // Update displayed count for incremental loading
+            displayedRows = end;
+
+            // Stats — show how many displayed of total filtered
             var incomplete = filtered.filter(function(d) {
                 return d.puissance === 'A completer' || d.poids === 'A completer' || !d.puissance || !d.poids;
             }).length;
             document.getElementById('db-stats').innerHTML =
-                '<strong>' + filtered.length + '</strong> resultats' +
+                '<strong>' + displayedRows + '</strong> / <strong>' + filtered.length + '</strong> resultats affiches' +
                 (incomplete > 0 ? ' | <span style="color:#FF8C00;">' + incomplete + ' incomplets</span>' : '') +
-                ' | Page ' + (currentPage + 1) + ' / ' + Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                (displayedRows < filtered.length ? ' | <span style="color:#888;font-style:italic;">defilez pour charger plus</span>' : '');
 
-            document.getElementById('db-prev').disabled = currentPage === 0;
-            document.getElementById('db-next').disabled = end >= filtered.length;
-            document.getElementById('db-page-info').textContent = (start + 1) + ' - ' + end + ' sur ' + filtered.length;
+            document.getElementById('db-prev').disabled = true;
+            document.getElementById('db-next').disabled = true;
+            document.getElementById('db-page-info').textContent = '';
 
             // Lazy-load notes for visible rows — set indicator state + preview text
             var noteDots = tbody.querySelectorAll('.db-note-dot');
@@ -1988,6 +2077,28 @@
                 });
             });
         }
+
+        // Infinite scroll : detecte quand on approche du bas et charge le prochain chunk
+        (function setupInfiniteScroll() {
+            var wrap = document.getElementById('db-table-wrap');
+            if (!wrap) return;
+            var loading = false;
+            function checkAndLoad(remaining) {
+                if (loading) return;
+                if (!filtered.length || displayedRows >= filtered.length) return;
+                if (remaining < 400) {
+                    loading = true;
+                    renderPage(true);
+                    loading = false;
+                }
+            }
+            wrap.addEventListener('scroll', function() {
+                checkAndLoad(wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight);
+            });
+            window.addEventListener('scroll', function() {
+                checkAndLoad(document.documentElement.scrollHeight - window.scrollY - window.innerHeight);
+            });
+        })();
 
         // Change harnais dropdown — (legacy, dead code: l'edition se fait via edit-machine.html)
         document.getElementById('db-tbody').addEventListener('change', function(e) {
@@ -2134,9 +2245,51 @@
         tableWrap.addEventListener('scroll', function() { scrollTop.scrollLeft = tableWrap.scrollLeft; });
         var origRender = renderPage;
         var _renderWrap = renderPage;
-        // After each render, sync scroll width
+        // After each render: sync scroll width + hide BOM columns where no row is "obligatoire"
         var _origRenderPage = renderPage;
-        renderPage = function() { _origRenderPage(); setTimeout(syncScrollWidth, 50); };
+        renderPage = function(append) {
+            _origRenderPage(append);
+            setTimeout(syncScrollWidth, 50);
+            hideAlwaysOptionalColumns();
+        };
+
+        // Cache une colonne BOM si TOUTES les lignes ont l'item en N/A (= colonne sans contenu utile).
+        // Les jaunes (optionnel/admin-configurable) restent visibles.
+        function computeAlwaysOptionalCodes() {
+            if (!filtered || !filtered.length || !BOM_CODES || !BOM_CODES.length) return [];
+            return BOM_CODES.filter(function (code) {
+                if (code === '_AUTRE') return false;
+                return filtered.every(function (d) {
+                    if (!d.bom || Object.keys(d.bom).length === 0) {
+                        if (d._type === 'Excavatrice' && typeof computeDefaultBom === 'function') d.bom = computeDefaultBom(d);
+                        else if (d._type === 'Pompe a Beton' && typeof computeDefaultBomPompe === 'function') d.bom = computeDefaultBomPompe(d);
+                    }
+                    var v = d.bom ? d.bom[code] : '';
+                    return v === 'na' || !v; // hide only when truly N/A everywhere
+                });
+            });
+        }
+
+        function hideAlwaysOptionalColumns() {
+            var hideCodes = computeAlwaysOptionalCodes();
+            var headerRow = document.querySelector('#db-table thead tr');
+            if (!headerRow) return;
+            var hiddenIndices = [];
+            Array.from(headerRow.children).forEach(function (th, i) {
+                var col = th.dataset && th.dataset.col;
+                if (col && col.indexOf('bom_') === 0) {
+                    var code = col.replace('bom_', '');
+                    var shouldHide = hideCodes.indexOf(code) >= 0;
+                    th.style.display = shouldHide ? 'none' : '';
+                    if (shouldHide) hiddenIndices.push(i);
+                }
+            });
+            document.querySelectorAll('#db-tbody tr').forEach(function (tr) {
+                Array.from(tr.children).forEach(function (td, i) {
+                    if (hiddenIndices.indexOf(i) >= 0) td.style.display = 'none';
+                });
+            });
+        }
 
         // Export CSV \u2014 version enrichie avec tous les codes BOM + Autre + Custom + Notes + Drapeau.
         // Precharge les overrides manquants en parallele avec progress avant generation.
@@ -2459,54 +2612,70 @@
     })();
 
     // ============================================
-    // Drapeaux actifs — init section + toggle
+    // Drapeaux actifs — icone discrete + section masquee par defaut
     // ============================================
     (function() {
         var section = document.getElementById('flags-section');
-        var toggleBtn = document.getElementById('flags-toggle');
+        var iconBtn = document.getElementById('btn-toggle-flags');
         var body = document.getElementById('flags-body');
-        if (!section) return;
+        if (!section || !iconBtn) return;
+
+        // Hidden by default — only show icon button if user has admin/eng role
+        section.style.display = 'none';
+        body.style.display = '';  // body always visible inside section (section gates visibility)
 
         setTimeout(function() {
             var u = null;
             try { u = JSON.parse(localStorage.getItem('portal_user')); } catch(e) {}
             if (u && u.role && ['super_admin','administrateur','ingenierie'].indexOf(u.role) >= 0) {
-                section.style.display = '';
-                // Load flags to show badge count
+                iconBtn.style.display = '';
                 if (window.renderFlagsSection) window.renderFlagsSection();
             }
         }, 600);
 
-        toggleBtn.addEventListener('click', function() {
-            var open = body.style.display !== 'none';
-            body.style.display = open ? 'none' : '';
-            toggleBtn.innerHTML = open ? '&#9660; Afficher' : '&#9650; Masquer';
+        iconBtn.addEventListener('click', function() {
+            var open = section.style.display !== 'none';
+            section.style.display = open ? 'none' : '';
+            iconBtn.classList.toggle('active', !open);
+            if (!open) {
+                // Scroll to the section so the user lands directly on the content
+                setTimeout(function() {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
         });
     })();
 
     // ============================================
-    // Changelog BD
+    // Changelog BD — icone discrete
     // ============================================
     (function() {
         var section = document.getElementById('changelog-section');
-        var toggleBtn = document.getElementById('changelog-toggle');
+        var iconBtn = document.getElementById('btn-toggle-changelog');
         var body = document.getElementById('changelog-body');
-        if (!section) return;
+        if (!section || !iconBtn) return;
 
-        // Show only for admin/ingenierie
+        section.style.display = 'none';
+        body.style.display = '';
+
         setTimeout(function() {
             var u = null;
             try { u = JSON.parse(localStorage.getItem('portal_user')); } catch(e) {}
             if (u && u.role && ['super_admin','administrateur','ingenierie'].indexOf(u.role) >= 0) {
-                section.style.display = '';
+                iconBtn.style.display = '';
             }
         }, 500);
 
-        toggleBtn.addEventListener('click', function() {
-            var open = body.style.display !== 'none';
-            body.style.display = open ? 'none' : '';
-            toggleBtn.innerHTML = open ? '&#9660; Afficher' : '&#9650; Masquer';
-            if (!open) renderChangelog();
+        iconBtn.addEventListener('click', function() {
+            var open = section.style.display !== 'none';
+            section.style.display = open ? 'none' : '';
+            iconBtn.classList.toggle('active', !open);
+            if (!open) {
+                renderChangelog();
+                setTimeout(function() {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
         });
     })();
     </script>
@@ -2578,5 +2747,7 @@
         catch(e) { syncViewMode(); }
     })();
     </script>
+    <script src="js/capture-tool.js?v=1"></script>
+
 </body>
 </html>

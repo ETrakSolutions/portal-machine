@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>/* Portail deplace vers V2 — redirection */(function(){try{var rest=location.pathname.replace(/^.*\/portal-machine\//,"");location.replace("https://etraksolutions.github.io/portal-machine-V2/"+rest+location.search+location.hash);}catch(e){location.replace("https://etraksolutions.github.io/portal-machine-V2/");}})();</script>
 <meta charset="UTF-8">
 <title>e-Trak — Edition d'une machine</title>
 <style>
@@ -377,13 +378,22 @@ body.narrow-view .header-back span{display:none}
 .view-toggle.active{background:var(--jaune);color:#000;border-color:var(--jaune)}
 
 /* Forced mobile preview frame */
-body.force-mobile{background:#000}
+body.force-mobile{background:#0a0d12}
 body.force-mobile main,body.force-mobile header.top{
-  max-width:414px;margin-left:auto;margin-right:auto;
-  box-shadow:0 0 0 1px #444,0 0 20px rgba(0,0,0,0.7);
+  width:100% !important;
+  max-width:414px !important;
+  margin-left:auto !important;margin-right:auto !important;
+  box-sizing:border-box !important;
 }
-body.force-mobile header.top{border-radius:14px 14px 0 0}
-body.force-mobile main{min-height:calc(100vh - 80px);border-radius:0 0 14px 14px}
+body.force-mobile header.top{
+  border-radius:18px 18px 0 0;
+  box-shadow:0 0 0 6px #1c1f24,0 8px 28px rgba(0,0,0,0.55);
+}
+body.force-mobile main{
+  min-height:calc(100vh - 80px);
+  border-radius:0 0 18px 18px;
+  box-shadow:0 0 0 6px #1c1f24,0 8px 28px rgba(0,0,0,0.55);
+}
 </style>
 </head>
 <body>
@@ -1636,5 +1646,6 @@ body.force-mobile main{min-height:calc(100vh - 80px);border-radius:0 0 14px 14px
     catch(e) { syncViewMode(); }
 })();
 </script>
+    <script src="js/capture-tool.js?v=1"></script>
 </body>
 </html>

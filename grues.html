@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>/* Portail deplace vers V2 — redirection */(function(){try{var rest=location.pathname.replace(/^.*\/portal-machine\//,"");location.replace("https://etraksolutions.github.io/portal-machine-V2/"+rest+location.search+location.hash);}catch(e){location.replace("https://etraksolutions.github.io/portal-machine-V2/");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>e-Trak | Base de donnees Grues Mobiles</title>
@@ -911,6 +912,7 @@ viewBtn.addEventListener('click', ()=> applyForcedView(!document.body.classList.
 window.addEventListener('resize', syncViewMode);
 applyForcedView(localStorage.getItem(VIEW_KEY) === '1');
 </script>
+    <script src="js/capture-tool.js?v=1"></script>
 </body>
 </html>
 
