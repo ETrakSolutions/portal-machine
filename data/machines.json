@@ -5443,6 +5443,19 @@
           "Poids operationnel (kg / lbs)": "1790 kg / 3946 lbs",
           "Classe machine": "Mini"
         },
+        "301.8": {
+          "Image": "",
+          "Puissance moteur (kW / HP)": "15.7 kW / 21 HP",
+          "Type de traction": "Chenille",
+          "Type de boom": "Boom 1 partie",
+          "Longueur de fleche (m / pi)": "2.1 m / 6'11\"",
+          "Longueur de stick (m / pi)": "1.16 m / 3'10\"",
+          "Swing boom": "Oui",
+          "Voltage machine (V/type)": "12V DC",
+          "Capacite max de levage (kg / lbs)": "810 kg / 1786 lbs",
+          "Poids operationnel (kg / lbs)": "2020 kg / 4453 lbs",
+          "Classe machine": "Mini"
+        },
         "302": {
           "Image": "",
           "Puissance moteur (kW / HP)": "15.7 kW / 21 HP",
@@ -6119,6 +6132,19 @@
           "Voltage machine (V/type)": "12V DC",
           "Capacite max de levage (kg / lbs)": "744 kg / 1640 lbs",
           "Poids operationnel (kg / lbs)": "1790 kg / 3946 lbs",
+          "Classe machine": "Mini"
+        },
+        "301.8": {
+          "Image": "",
+          "Puissance moteur (kW / HP)": "15.7 kW / 21 HP",
+          "Type de traction": "Chenille",
+          "Type de boom": "Boom 1 partie",
+          "Longueur de fleche (m / pi)": "2.1 m / 6'11\"",
+          "Longueur de stick (m / pi)": "1.16 m / 3'10\"",
+          "Swing boom": "Oui",
+          "Voltage machine (V/type)": "12V DC",
+          "Capacite max de levage (kg / lbs)": "810 kg / 1786 lbs",
+          "Poids operationnel (kg / lbs)": "2020 kg / 4453 lbs",
           "Classe machine": "Mini"
         },
         "302": {
